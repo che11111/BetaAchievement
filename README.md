@@ -14,6 +14,9 @@
 </p>
 
 <p align="center"><b>English</b> · <a href="README-zh.md">简体中文</a></p>
+<p align="center">
+  <a href="https://che11111.github.io/BetaAchievement/"><img src="https://img.shields.io/badge/ACHIEVEMENT_WEBSITE-VISIT-3fb950?style=for-the-badge" alt="Open the online achievement website"></a>
+</p>
 
 BetaAchievement is a server-side achievement plugin for Minecraft Beta 1.7.3 Project Poseidon. It evaluates and persists all 16 original achievements on the server, supports SQLite and MySQL/MariaDB, and exposes an API for querying achievement progress.
 

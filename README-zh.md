@@ -14,6 +14,9 @@
 </p>
 
 <p align="center"><a href="README.md">English</a> · <b>简体中文</b></p>
+<p align="center">
+  <a href="https://che11111.github.io/BetaAchievement/"><img src="https://img.shields.io/badge/%E5%9C%A8%E7%BA%BF%E6%88%90%E5%B0%B1%E9%A1%B5%E9%9D%A2-%E6%89%93%E5%BC%80-3fb950?style=for-the-badge" alt="打开在线成就页面"></a>
+</p>
 
 BetaAchievement 是一个面向 Minecraft Beta 1.7.3 Project-Poseidon 的服务端成就插件。它在服务端判定并持久化原版 16 个成就；支持 SQLite 和 MySQL/MariaDB，并提供成就进度查询 API。
 
