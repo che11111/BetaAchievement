@@ -15,7 +15,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Files;
 
 public final class BetaAchievement extends JavaPlugin {
     private AchievementRegistry registry;
@@ -25,13 +24,6 @@ public final class BetaAchievement extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        if (!migrateLegacyDataFolder()) {
-            getServer().getLogger().severe(
-                "Could not migrate plugins/BetaAchievements to plugins/BetaAchievement."
-            );
-            getServer().getPluginManager().disablePlugin(this);
-            return;
-        }
         copyDefaultResources();
         try {
             getConfiguration().load();
@@ -79,56 +71,9 @@ public final class BetaAchievement extends JavaPlugin {
         });
     }
 
-    private boolean migrateLegacyDataFolder() {
-        File target = getDataFolder();
-        File parent = target.getParentFile();
-        if (parent == null) {
-            return true;
-        }
-
-        File legacy = new File(parent, "BetaAchievements");
-        if (!legacy.isDirectory()) {
-            return true;
-        }
-        if (target.exists()) {
-            try {
-                File[] existing = target.listFiles();
-                if (target.isDirectory() && existing != null && existing.length == 0) {
-                    Files.delete(target.toPath());
-                } else {
-                    getServer().getLogger().severe(
-                        "Both plugins/BetaAchievements and plugins/BetaAchievement exist. "
-                            + "Merge the old data into the new folder manually."
-                    );
-                    return false;
-                }
-            } catch (IOException exception) {
-                getServer().getLogger().severe(
-                    "Could not inspect the new plugin data folder: " + exception.getMessage()
-                );
-                return false;
-            }
-        }
-
-        try {
-            Files.move(legacy.toPath(), target.toPath());
-            getServer().getLogger().info(
-                "Migrated plugin data folder from BetaAchievements to BetaAchievement."
-            );
-            return true;
-        } catch (IOException exception) {
-            getServer().getLogger().severe(
-                "Could not move the legacy plugin data folder: " + exception.getMessage()
-            );
-            return false;
-        }
-    }
-
     private void copyDefaultResources() {
         getDataFolder().mkdirs();
         copyResource("config.yml");
-        copyResource("achievements.md");
-        copyResource("commands.md");
     }
 
     private void copyResource(String name) {

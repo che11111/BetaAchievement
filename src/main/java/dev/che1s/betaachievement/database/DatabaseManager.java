@@ -132,7 +132,6 @@ public final class DatabaseManager {
             Class.forName(sqlite ? "org.sqlite.JDBC" : "com.mysql.jdbc.Driver");
             idle.add(open());
             schema();
-            migrateLegacyProgress();
             enabled = true;
             ready = true;
             return true;
@@ -218,17 +217,6 @@ public final class DatabaseManager {
             try {
                 if (sqlite) {
                     statement.executeUpdate(
-                        "CREATE TABLE IF NOT EXISTS `" + prefix + "progress` ("
-                            + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                            + "player_uuid TEXT NOT NULL, achievement_id TEXT NOT NULL, "
-                            + "completed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "
-                            + "UNIQUE(player_uuid, achievement_id))"
-                    );
-                    statement.executeUpdate(
-                        "CREATE INDEX IF NOT EXISTS `" + prefix + "idx_player_uuid` "
-                            + "ON `" + prefix + "progress` (player_uuid)"
-                    );
-                    statement.executeUpdate(
                         "CREATE TABLE IF NOT EXISTS `" + prefix + "players` ("
                             + "player_uuid TEXT NOT NULL PRIMARY KEY, player_name TEXT NOT NULL)"
                     );
@@ -262,14 +250,6 @@ public final class DatabaseManager {
                             + "ON `" + prefix + "run_progress` (run_id, sequence)"
                     );
                 } else {
-                    statement.executeUpdate(
-                        "CREATE TABLE IF NOT EXISTS `" + prefix + "progress` ("
-                            + "id BIGINT NOT NULL AUTO_INCREMENT, player_uuid VARCHAR(36) NOT NULL, "
-                            + "achievement_id VARCHAR(64) NOT NULL, completed_at DATETIME NOT NULL, "
-                            + "PRIMARY KEY (id), UNIQUE KEY uk_player_achievement "
-                            + "(player_uuid, achievement_id), INDEX idx_player_uuid (player_uuid)) "
-                            + "ENGINE=InnoDB DEFAULT CHARSET=utf8"
-                    );
                     statement.executeUpdate(
                         "CREATE TABLE IF NOT EXISTS `" + prefix + "players` ("
                             + "player_uuid VARCHAR(36) NOT NULL PRIMARY KEY, "
@@ -366,138 +346,6 @@ public final class DatabaseManager {
             }
         } finally {
             release(connection);
-        }
-    }
-
-    private void migrateLegacyProgress() throws Exception {
-        Connection connection = borrow();
-        try {
-            List<String[]> players = new ArrayList<String[]>();
-            PreparedStatement statement = connection.prepareStatement(
-                "SELECT DISTINCT p.player_uuid, COALESCE(n.player_name, 'Unknown') "
-                    + "FROM `" + prefix + "progress` p "
-                    + "LEFT JOIN `" + prefix + "players` n "
-                    + "ON n.player_uuid=p.player_uuid"
-            );
-            try {
-                ResultSet rows = statement.executeQuery();
-                while (rows.next()) {
-                    players.add(new String[] {rows.getString(1), rows.getString(2)});
-                }
-                rows.close();
-            } finally {
-                statement.close();
-            }
-
-            for (String[] player : players) {
-                if (hasAnyRun(connection, player[0])) {
-                    continue;
-                }
-                migrateLegacyPlayer(connection, player[0], player[1]);
-            }
-        } finally {
-            release(connection);
-        }
-    }
-
-    private boolean hasAnyRun(Connection connection, String playerUuid) throws SQLException {
-        PreparedStatement statement = connection.prepareStatement(
-            "SELECT 1 FROM `" + prefix + "runs` WHERE player_uuid=? LIMIT 1"
-        );
-        try {
-            statement.setString(1, playerUuid);
-            ResultSet rows = statement.executeQuery();
-            boolean found = rows.next();
-            rows.close();
-            return found;
-        } finally {
-            statement.close();
-        }
-    }
-
-    private void migrateLegacyPlayer(
-        Connection connection,
-        String playerUuid,
-        String playerName
-    ) throws Exception {
-        String timestampExpression = sqlite
-            ? "CAST(strftime('%s', completed_at) AS INTEGER) * 1000"
-            : "UNIX_TIMESTAMP(completed_at) * 1000";
-        List<LegacyProgressRow> rows = new ArrayList<LegacyProgressRow>();
-        PreparedStatement statement = connection.prepareStatement(
-            "SELECT achievement_id, " + timestampExpression + " FROM `" + prefix
-                + "progress` WHERE player_uuid=? ORDER BY completed_at ASC, id ASC"
-        );
-        try {
-            statement.setString(1, playerUuid);
-            ResultSet result = statement.executeQuery();
-            while (result.next()) {
-                String achievementId = result.getString(1);
-                if (plugin.getRegistry().get(achievementId) != null) {
-                    long completedAtMs = result.getLong(2);
-                    if (result.wasNull()) {
-                        completedAtMs = System.currentTimeMillis();
-                    }
-                    rows.add(new LegacyProgressRow(achievementId, completedAtMs));
-                }
-            }
-            result.close();
-        } finally {
-            statement.close();
-        }
-        if (rows.isEmpty()) {
-            return;
-        }
-
-        long startedAt = rows.get(0).completedAtMs;
-        long finishedAt = rows.get(rows.size() - 1).completedAtMs;
-        RunStatus status = rows.size() >= plugin.getRegistry().all().size()
-            ? RunStatus.COMPLETED
-            : RunStatus.ACTIVE;
-
-        connection.setAutoCommit(false);
-        try {
-            long runId = insertRun(
-                connection,
-                playerUuid,
-                playerName,
-                1,
-                status,
-                startedAt,
-                status == RunStatus.COMPLETED ? finishedAt : null,
-                status == RunStatus.COMPLETED ? finishedAt - startedAt : null,
-                rows.get(0).achievementId,
-                startedAt,
-                "LEGACY"
-            );
-
-            long previousAt = startedAt;
-            int sequence = 1;
-            for (LegacyProgressRow row : rows) {
-                long split = sequence == 1 ? 0L : row.completedAtMs - previousAt;
-                insertRunProgress(
-                    connection,
-                    runId,
-                    row.achievementId,
-                    sequence++,
-                    row.completedAtMs,
-                    row.completedAtMs - startedAt,
-                    split
-                );
-                previousAt = row.completedAtMs;
-            }
-            connection.commit();
-            plugin.getServer().getLogger().info(
-                "Migrated legacy achievements for " + playerName + " into run 1."
-            );
-        } catch (Exception exception) {
-            rollbackQuietly(connection);
-            throw new SQLException(
-                "Legacy migration failed for " + playerUuid + ": " + exception.getMessage(),
-                exception
-            );
-        } finally {
-            connection.setAutoCommit(true);
         }
     }
 
@@ -1148,16 +996,6 @@ public final class DatabaseManager {
             connection.rollback();
         } catch (SQLException ignored) {
             // Preserve the original database failure.
-        }
-    }
-
-    private static final class LegacyProgressRow {
-        final String achievementId;
-        final long completedAtMs;
-
-        LegacyProgressRow(String achievementId, long completedAtMs) {
-            this.achievementId = achievementId;
-            this.completedAtMs = completedAtMs;
         }
     }
 

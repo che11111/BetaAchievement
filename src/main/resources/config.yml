@@ -1,51 +1,51 @@
-# 修改配置后请重启服务器。
-# 从旧版本升级前请先备份 achievements.db 或对应 MySQL 数据库。
+# Restart the server after changing this file. / 修改配置后请重启服务器。
+# Back up achievements.db or the MySQL database before upgrading. / 升级前请备份数据库。
 
 database:
-  # 是否启用持久化。
-  # false：插件仍可使用，但成就只保存在内存中，重启后清空。
+  # Enable persistent storage. / 是否启用持久化。
+  # When false, achievements are kept in memory and lost on restart. / false 时仅保存在内存，重启后清空。
   enabled: true
 
-  # sqlite：使用本文件下方的 SQLite 配置。
-  # mysql：使用本文件下方的 MySQL/MariaDB 配置。
+  # Storage type: sqlite or mysql. / 存储类型：sqlite 或 mysql。
+  # mysql uses the MySQL/MariaDB connection settings below. / mysql 使用下方的 MySQL/MariaDB 设置。
   type: sqlite
 
-  # SQLite 数据库文件，相对 plugins/BetaAchievement/ 目录。
+  # SQLite database file, relative to plugins/BetaAchievement/. / SQLite 文件，相对插件数据目录。
   file: achievements.db
 
-  # 以下五项只在 database.type 为 mysql 时使用。
+  # The following five settings are used only when type is mysql. / 以下五项仅在 type 为 mysql 时使用。
   host: 127.0.0.1
   port: 3306
   database: minecraft
   username: minecraft
   password: change_me
 
-  # 数据表前缀，只能包含英文字母、数字和下划线。
+  # Table prefix; letters, digits and underscores only. / 表前缀，仅允许字母、数字和下划线。
   table-prefix: beta_achievements_
 
 runs:
-  # 第 2 轮及以后进入 ACTIVE 后的最长挑战时间，单位为小时。
-  # 超时后会删除该活动轮次及其 run_progress 数据。
-  # 第 1 轮、READY 轮次和所有 COMPLETED 轮次不会被删除。
-  # 设置为 0 可关闭自动超时。
+  # Maximum active time for run 2 and later, in hours. / 第 2 轮及以后的最长活动时间，单位小时。
+  # Expired active runs and their run_progress rows are deleted. / 超时会删除该活动轮次及进度明细。
+  # Run 1, READY runs and COMPLETED runs are never deleted. / 第 1 轮、READY 和 COMPLETED 轮次不会被删除。
+  # Set to 0 to disable the timeout. / 设置为 0 可关闭自动超时。
   repeat-timeout-hours: 12
 
 announce:
-  # 解锁成就时，是否向全服广播聊天消息。
-  # false：消息只发送给获得成就的玩家。
+  # Broadcast unlock messages to all players. / 是否向全服广播解锁消息。
+  # When false, only the unlocking player receives the message. / false 时只发送给解锁玩家。
   broadcast: true
 
-  # 是否同时将解锁消息写入服务器控制台。
+  # Also write unlock messages to the server console. / 是否同时输出到服务器控制台。
   console: true
 
 messages:
-  # 游戏内解锁消息。
-  # 支持 & 颜色代码，{player} 为玩家名，{achievement} 为英文成就名。
+  # In-game unlock message. / 游戏内解锁消息。
+  # Supports & color codes, {player} and the English {achievement}. / 支持 & 颜色代码及玩家、英文成就名变量。
   achievement-unlocked: '&6Achievement Get! &f{player} &eunlocked &f{achievement}'
 
-  # 控制台解锁消息。
-  # {player} 为玩家名，{achievement} 为中文成就名。
+  # Console unlock message. / 控制台解锁消息。
+  # {player} is the player name; {achievement} is the Chinese name. / 变量依次为玩家名和中文成就名。
   achievement-unlocked-console: '[成就] {player} 获得了成就「{achievement}」'
 
-  # 玩家没有权限时显示的提示。
+  # Message shown when a player lacks permission. / 玩家无权限时的提示。
   no-permission: '&cYou don''t have permission.'
