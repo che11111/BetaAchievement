@@ -15,9 +15,6 @@
 
 <p align="center"><b>English</b> · <a href="https://github.com/che11111/BetaAchievement/blob/main/README-zh.md">简体中文</a></p>
 <p align="center">
-  <a href="https://che11111.github.io/BetaAchievement/"><img src="https://raw.githubusercontent.com/che11111/BetaAchievement/main/img/achievements-page.png" width="560" alt="Open the online achievement website"></a>
-</p>
-<p align="center">
   <a href="https://github.com/che11111/BetaAchievement/releases">Download</a> ·
   <a href="https://github.com/che11111/BetaAchievement">Source & Full Docs</a> ·
   <a href="https://github.com/che11111/BetaAchievement/issues">Report an Issue</a>
@@ -25,14 +22,9 @@
 
 BetaAchievement is a server-side achievement plugin for Minecraft Beta 1.7.3 Project Poseidon. It evaluates and persists all 16 original achievements on the server, supports SQLite and MySQL/MariaDB, and exposes an API for querying achievement progress.
 
-## Features
-
-- Evaluate all 16 original achievements on the server and enforce parent requirements.
-- Handle Beta 1.7.3 server events that are missing or incomplete for inventory, crafting, and special actions.
-- Broadcast unlocks to the whole server and optionally write them to the console.
-- Track cumulative time, splits, run history, personal bests, and a server leaderboard for 16/16 speedruns.
-- Persist players, runs, and individual progress with SQLite or MySQL/MariaDB.
-- Provide other plugins with an API for current progress, full-completion rank, and run data.
+| Preview | Features |
+| :---: | :--- |
+| <a href="https://che11111.github.io/BetaAchievement/"><img src="https://raw.githubusercontent.com/che11111/BetaAchievement/main/img/achievements-page.png" width="400" alt="Open the online achievement website"></a> | • Detect all 16 original achievements on the server and verify achievement parent requirements.<br>• Adapt to missing inventory, crafting, and special-behavior events on Beta 1.7.3 servers.<br>• Broadcast unlocks server-wide and optionally output them to the console.<br>• Record cumulative time, split times, run history, personal bests, and a server leaderboard for each 16/16 run.<br>• Persist players, runs, and individual progress using SQLite or MySQL/MariaDB.<br>• Expose current progress, full-completion rank, and run data queries to other plugins through the API. |
 
 ## Server-Side Achievement Detection
 

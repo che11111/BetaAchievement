@@ -14,20 +14,12 @@
 </p>
 
 <p align="center"><a href="README.md">English</a> · <b>简体中文</b></p>
-<p align="center">
-  <a href="https://che11111.github.io/BetaAchievement/"><img src="img/achievements-page.png" width="560" alt="打开在线成就页面"></a>
-</p>
 
 BetaAchievement 是一个面向 Minecraft Beta 1.7.3 Project-Poseidon 的服务端成就插件。它在服务端判定并持久化原版 16 个成就；支持 SQLite 和 MySQL/MariaDB，并提供成就进度查询 API。
 
-## 功能
-
-- 在服务端判定原版 16 个成就，并检查成就前置关系。
-- 适配 Beta 1.7.3 服务端缺少背包、合成和特殊行为事件的情况。
-- 解锁后全服广播，并可同时输出到控制台。
-- 记录每轮 16/16 竞速的累计时间、单项耗时、历史成绩、个人最佳和全服排行榜。
-- 使用 SQLite 或 MySQL/MariaDB 持久化玩家、轮次和逐项进度。
-- 向其他插件提供当前进度、全成就完成排名和竞速数据查询 API。
+| 页面预览 | 功能 |
+| :---: | :--- |
+| <a href="https://che11111.github.io/BetaAchievement/"><img src="img/achievements-page.png" width="400" alt="打开在线成就页面"></a> | • 在服务端判定原版 16 个成就，并检查成就前置关系。<br>• 适配 Beta 1.7.3 服务端缺少背包、合成和特殊行为事件的情况。<br>• 解锁后全服广播，并可同时输出到控制台。<br>• 记录每轮 16/16 竞速的累计时间、单项耗时、历史成绩、个人最佳和全服排行榜。<br>• 使用 SQLite 或 MySQL/MariaDB 持久化玩家、轮次和逐项进度。<br>• 向其他插件提供当前进度、全成就完成排名和竞速数据查询 API。 |
 
 ## 服务端成就判定
 
