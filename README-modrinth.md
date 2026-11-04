@@ -15,7 +15,7 @@
 
 <p align="center"><b>English</b> · <a href="https://github.com/che11111/BetaAchievement/blob/main/README-zh.md">简体中文</a></p>
 <p align="center">
-  <a href="https://che11111.github.io/BetaAchievement/"><img src="https://img.shields.io/badge/ACHIEVEMENT_WEBSITE-VISIT-3fb950?style=for-the-badge" alt="Open the online achievement website"></a>
+  <a href="https://che11111.github.io/BetaAchievement/"><img src="https://raw.githubusercontent.com/che11111/BetaAchievement/main/img/achievements-page.png" width="560" alt="Open the online achievement website"></a>
 </p>
 <p align="center">
   <a href="https://github.com/che11111/BetaAchievement/releases">Download</a> ·
