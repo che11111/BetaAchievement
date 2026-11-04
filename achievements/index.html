@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- GitHub Pages entry point. -->
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
@@ -30,7 +31,7 @@
       background-image:
         radial-gradient(circle at 50% 28%, rgba(137, 118, 87, 0.2), transparent 44%),
         linear-gradient(rgba(11, 10, 9, 0.54), rgba(7, 7, 7, 0.82)),
-        url("img/beta-ui/gui-background.png");
+        url("../img/beta-ui/gui-background.png");
       background-position: center, center, center;
       background-size: auto, auto, 64px 64px;
       color: var(--ink);
@@ -1017,11 +1018,11 @@
       });
 
       Promise.all([
-        loadImage("img/beta-ui/achievement-bg.png"),
-        loadImage("img/beta-ui/font-default.png"),
-        loadImage("img/beta-ui/gui.png"),
-        loadImage("img/beta-ui/terrain.png"),
-        ...achievements.map((achievement) => loadImage(`img/icon_256x/${achievement.id}.png`))
+        loadImage("../img/beta-ui/achievement-bg.png"),
+        loadImage("../img/beta-ui/font-default.png"),
+        loadImage("../img/beta-ui/gui.png"),
+        loadImage("../img/beta-ui/terrain.png"),
+        ...achievements.map((achievement) => loadImage(`../img/icon_256x/${achievement.id}.png`))
       ]).then((loaded) => {
         assets.panel = loaded[0];
         assets.font = loaded[1];
