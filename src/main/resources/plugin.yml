@@ -1,0 +1,18 @@
+name: BetaAchievement
+version: 1.0.0
+main: dev.che1s.betaachievement.BetaAchievement
+description: Server-side persistent Beta 1.7.3 achievements
+author: che1s
+commands:
+  achievement:
+    description: Manage Beta achievements and speed runs
+    usage: /achievement <check|run|history|pb|top|grant|grantall|revoke|reset|debug> ...
+    aliases: [ach]
+permissions:
+  betaachievement.admin: { default: op }
+  betaachievement.view.others: { default: op }
+  betaachievement.grant: { default: op }
+  betaachievement.grantall: { default: op }
+  betaachievement.revoke: { default: op }
+  betaachievement.reset: { default: op }
+  betaachievement.debug: { default: op }

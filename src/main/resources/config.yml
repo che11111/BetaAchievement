@@ -1,0 +1,51 @@
+# 修改配置后请重启服务器。
+# 从旧版本升级前请先备份 achievements.db 或对应 MySQL 数据库。
+
+database:
+  # 是否启用持久化。
+  # false：插件仍可使用，但成就只保存在内存中，重启后清空。
+  enabled: true
+
+  # sqlite：使用本文件下方的 SQLite 配置。
+  # mysql：使用本文件下方的 MySQL/MariaDB 配置。
+  type: sqlite
+
+  # SQLite 数据库文件，相对 plugins/BetaAchievement/ 目录。
+  file: achievements.db
+
+  # 以下五项只在 database.type 为 mysql 时使用。
+  host: 127.0.0.1
+  port: 3306
+  database: minecraft
+  username: minecraft
+  password: change_me
+
+  # 数据表前缀，只能包含英文字母、数字和下划线。
+  table-prefix: beta_achievements_
+
+runs:
+  # 第 2 轮及以后进入 ACTIVE 后的最长挑战时间，单位为小时。
+  # 超时后会删除该活动轮次及其 run_progress 数据。
+  # 第 1 轮、READY 轮次和所有 COMPLETED 轮次不会被删除。
+  # 设置为 0 可关闭自动超时。
+  repeat-timeout-hours: 12
+
+announce:
+  # 解锁成就时，是否向全服广播聊天消息。
+  # false：消息只发送给获得成就的玩家。
+  broadcast: true
+
+  # 是否同时将解锁消息写入服务器控制台。
+  console: true
+
+messages:
+  # 游戏内解锁消息。
+  # 支持 & 颜色代码，{player} 为玩家名，{achievement} 为英文成就名。
+  achievement-unlocked: '&6Achievement Get! &f{player} &eunlocked &f{achievement}'
+
+  # 控制台解锁消息。
+  # {player} 为玩家名，{achievement} 为中文成就名。
+  achievement-unlocked-console: '[成就] {player} 获得了成就「{achievement}」'
+
+  # 玩家没有权限时显示的提示。
+  no-permission: '&cYou don''t have permission.'

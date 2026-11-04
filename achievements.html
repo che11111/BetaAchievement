@@ -1,0 +1,1046 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17130f">
+  <title>BetaAchievement — Minecraft Beta 1.7.3</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #eee6d2;
+      --muted: #b8aa91;
+      --panel-shadow: rgba(0, 0, 0, 0.78);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-width: 320px;
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      overflow: hidden;
+      background-color: #17130f;
+      background-image:
+        radial-gradient(circle at 50% 28%, rgba(137, 118, 87, 0.2), transparent 44%),
+        linear-gradient(rgba(11, 10, 9, 0.54), rgba(7, 7, 7, 0.82)),
+        url("img/beta-ui/gui-background.png");
+      background-position: center, center, center;
+      background-size: auto, auto, 64px 64px;
+      color: var(--ink);
+      image-rendering: pixelated;
+    }
+
+    body::before,
+    body::after {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      content: "";
+    }
+
+    body::before {
+      background:
+        linear-gradient(90deg, rgba(0, 0, 0, 0.48), transparent 16%, transparent 84%, rgba(0, 0, 0, 0.48)),
+        radial-gradient(ellipse at center, transparent 20%, rgba(0, 0, 0, 0.72) 100%);
+    }
+
+    body::after {
+      opacity: 0.15;
+      background-image:
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 4px);
+      mix-blend-mode: overlay;
+    }
+
+    .stage {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      min-height: 100svh;
+      padding: 36px 18px 72px;
+      place-items: center;
+    }
+
+    .language-toggle {
+      position: fixed;
+      z-index: 10;
+      top: max(18px, env(safe-area-inset-top));
+      right: max(18px, env(safe-area-inset-right));
+      min-width: 76px;
+      padding: 8px 12px;
+      border: 2px solid #d0d0d0;
+      border-radius: 0;
+      background: #363636;
+      box-shadow:
+        inset 2px 2px 0 #696969,
+        inset -2px -2px 0 #171717,
+        0 3px 10px rgba(0, 0, 0, 0.55);
+      color: #f0f0f0;
+      font: 700 13px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+    }
+
+    .language-toggle:hover,
+    .language-toggle:focus-visible {
+      border-color: #ffffa0;
+      color: #ffffa0;
+      outline: none;
+    }
+
+    .game-shell {
+      position: relative;
+      width: min(92vw, 768px, calc((100svh - 122px) * 256 / 202));
+      aspect-ratio: 256 / 202;
+      filter: drop-shadow(0 18px 36px var(--panel-shadow));
+      image-rendering: pixelated;
+      isolation: isolate;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      image-rendering: pixelated;
+      touch-action: none;
+    }
+
+    canvas.is-dragging {
+      cursor: grabbing;
+    }
+
+    .hotspot-layer {
+      position: absolute;
+      z-index: 2;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .node-hotspot {
+      position: absolute;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .node-hotspot:focus-visible {
+      border-radius: 0;
+      opacity: 1;
+      outline: 2px solid rgba(255, 255, 255, 0.9);
+      outline-offset: -1px;
+    }
+
+    .done-hotspot {
+      position: absolute;
+      z-index: 3;
+      left: 59.375%;
+      top: 86.6337%;
+      width: 31.25%;
+      height: 9.90099%;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: transparent;
+      font-size: 0;
+      cursor: pointer;
+    }
+
+    .done-hotspot:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.9);
+      outline-offset: 1px;
+    }
+
+    .help {
+      position: absolute;
+      bottom: -38px;
+      left: 50%;
+      width: max-content;
+      max-width: 92vw;
+      color: var(--muted);
+      font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      letter-spacing: 0.04em;
+      text-align: center;
+      text-shadow: 0 1px 2px #000;
+      transform: translateX(-50%);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 540px) {
+      .stage {
+        padding-right: 10px;
+        padding-left: 10px;
+      }
+
+      .language-toggle {
+        top: 12px;
+        right: 12px;
+        min-width: 68px;
+        padding: 7px 10px;
+        font-size: 12px;
+      }
+
+      .game-shell {
+        width: min(96vw, 768px, calc((100svh - 116px) * 256 / 202));
+      }
+
+      .help {
+        bottom: -34px;
+        font-size: 11px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body::after {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage">
+    <button class="language-toggle" id="language-toggle" type="button" aria-label="切换为中文">中文</button>
+    <div class="game-shell" id="game-shell">
+      <canvas id="achievement-screen" width="1024" height="808" aria-label="Minecraft Beta 1.7.3 成就页面"></canvas>
+      <div class="hotspot-layer" id="hotspot-layer"></div>
+      <button class="done-hotspot" id="done-hotspot" type="button" aria-label="Done（重置视图）">Done</button>
+      <p class="help">点击激活 · 拖拽浏览 · 滚轮滚动 · 悬停或聚焦查看成就</p>
+      <p class="sr-only" id="status" aria-live="polite"></p>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const SCREEN_W = 256;
+      const SCREEN_H = 202;
+      const VIEW_LEFT = 16;
+      const VIEW_TOP = 17;
+      const VIEW_W = 224;
+      const VIEW_H = 155;
+      const MIN_SCROLL_X = -136;
+      const MIN_SCROLL_Y = -232;
+      const MAX_SCROLL_X = 115;
+      const MAX_SCROLL_Y = 67;
+      const INITIAL_X = -82.5;
+      const INITIAL_Y = -70.5;
+
+      const achievements = [
+        {
+          id: "openInventory", x: 0, y: 0, parent: null, special: false,
+          name: "Taking Inventory", cn: "打开物品栏",
+          desc: "Press 'E' to open your inventory.",
+          cnDesc: "按 E 键打开物品栏。"
+        },
+        {
+          id: "mineWood", x: 2, y: 1, parent: "openInventory", special: false,
+          name: "Getting Wood", cn: "获得木头",
+          desc: "Attack a tree until a block of wood pops out",
+          cnDesc: "反复攻击树干，直到木头方块掉落。"
+        },
+        {
+          id: "buildWorkBench", x: 4, y: -1, parent: "mineWood", special: false,
+          name: "Benchmarking", cn: "这是？工作台！",
+          desc: "Craft a workbench with four blocks of planks",
+          cnDesc: "用四块木板合成一个工作台。"
+        },
+        {
+          id: "buildPickaxe", x: 4, y: 2, parent: "buildWorkBench", special: false,
+          name: "Time to Mine!", cn: "采矿时间到！",
+          desc: "Use planks and sticks to make a pickaxe",
+          cnDesc: "用木板和木棍合成一把镐。"
+        },
+        {
+          id: "buildFurnace", x: 3, y: 4, parent: "buildPickaxe", special: false,
+          name: "Hot Topic", cn: "“热”门话题",
+          desc: "Construct a furnace out of eight stone blocks",
+          cnDesc: "用八块圆石合成一个熔炉。"
+        },
+        {
+          id: "acquireIron", x: 1, y: 4, parent: "buildFurnace", special: false,
+          name: "Acquire Hardware", cn: "来硬的",
+          desc: "Smelt an iron ingot",
+          cnDesc: "冶炼一个铁锭。"
+        },
+        {
+          id: "buildHoe", x: 2, y: -3, parent: "buildWorkBench", special: false,
+          name: "Time to Farm!", cn: "耕种时间到！",
+          desc: "Use planks and sticks to make a hoe",
+          cnDesc: "用木板和木棍合成一把锄头。"
+        },
+        {
+          id: "makeBread", x: -1, y: -3, parent: "buildHoe", special: false,
+          name: "Bake Bread", cn: "烤面包",
+          desc: "Turn wheat into bread",
+          cnDesc: "将小麦做成面包。"
+        },
+        {
+          id: "bakeCake", x: 0, y: -5, parent: "buildHoe", special: false,
+          name: "The Lie", cn: "蛋糕是个谎言",
+          desc: "Wheat, sugar, milk and eggs!",
+          cnDesc: "小麦、糖、牛奶和鸡蛋！"
+        },
+        {
+          id: "buildBetterPickaxe", x: 6, y: 2, parent: "buildPickaxe", special: false,
+          name: "Getting an Upgrade", cn: "获得升级",
+          desc: "Construct a better pickaxe",
+          cnDesc: "合成一把更好的镐。"
+        },
+        {
+          id: "cookFish", x: 2, y: 6, parent: "buildFurnace", special: false,
+          name: "Delicious Fish", cn: "美味的鱼儿",
+          desc: "Catch and cook fish!",
+          cnDesc: "钓鱼并把它烤熟！"
+        },
+        {
+          id: "onARail", x: 2, y: 3, parent: "acquireIron", special: true,
+          name: "On A Rail", cn: "在铁路上",
+          desc: "Travel by minecart at least 1 km from where you started",
+          cnDesc: "乘坐矿车，从出发位置移动至少 1 公里。"
+        },
+        {
+          id: "buildSword", x: 6, y: -1, parent: "buildWorkBench", special: false,
+          name: "Time to Strike!", cn: "出击时间到！",
+          desc: "Use planks and sticks to make a sword",
+          cnDesc: "用木板和木棍合成一把剑。"
+        },
+        {
+          id: "killEnemy", x: 8, y: -1, parent: "buildSword", special: false,
+          name: "Monster Hunter", cn: "怪物猎人",
+          desc: "Attack and destroy a monster",
+          cnDesc: "攻击并消灭一个怪物。"
+        },
+        {
+          id: "killCow", x: 7, y: -3, parent: "buildSword", special: false,
+          name: "Cow Tipper", cn: "斗牛士",
+          desc: "Harvest some leather",
+          cnDesc: "采集一些皮革。"
+        },
+        {
+          id: "flyPig", x: 8, y: -4, parent: "killCow", special: true,
+          name: "When Pigs Fly", cn: "当猪飞的时候",
+          desc: "Fly a pig off a cliff",
+          cnDesc: "骑猪从悬崖上飞下去。"
+        }
+      ];
+
+      const byId = new Map(achievements.map((achievement) => [achievement.id, achievement]));
+      const completed = new Set();
+      const query = new URLSearchParams(window.location.search);
+      const requestedLanguage = query.get("lang");
+      let language = requestedLanguage === "zh" || requestedLanguage === "en"
+        ? requestedLanguage
+        : "en";
+
+      const fontCharacters =
+        " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+      const glyphWidths = [
+        2, 2, 5, 6, 6, 6, 6, 3, 5, 5, 5, 6, 2, 6, 2, 6,
+        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 2, 2, 5, 6, 5, 6,
+        7, 6, 6, 6, 6, 6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6,
+        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 4, 6, 4, 6, 6,
+        3, 6, 6, 6, 6, 6, 5, 6, 6, 2, 6, 5, 3, 6, 6, 6,
+        6, 6, 6, 6, 4, 6, 6, 6, 6, 6, 6, 5, 2, 5, 7
+      ];
+
+      const canvas = document.getElementById("achievement-screen");
+      const hotspotLayer = document.getElementById("hotspot-layer");
+      const doneHotspot = document.getElementById("done-hotspot");
+      const languageToggle = document.getElementById("language-toggle");
+      const helpText = document.querySelector(".help");
+      const status = document.getElementById("status");
+      const ctx = canvas.getContext("2d", { alpha: true });
+      const systemTextContext = document.createElement("canvas").getContext("2d");
+      const cjkFont = '8px "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif';
+      ctx.imageSmoothingEnabled = false;
+      systemTextContext.font = cjkFont;
+
+      const assets = {};
+      const nodeHotspots = new Map();
+      const dimIconCache = new Map();
+      const tintedFontCache = new Map();
+
+      let currentX = INITIAL_X;
+      let currentY = INITIAL_Y;
+      let targetX = INITIAL_X;
+      let targetY = INITIAL_Y;
+      let hoverId = null;
+      let keyboardId = null;
+      let pointerPosition = null;
+      let doneHovered = false;
+      let dragging = false;
+      let dragMoved = false;
+      let dragStart = null;
+      let lastFrameTime = 0;
+      let ready = false;
+
+      function loadImage(src) {
+        return new Promise((resolve, reject) => {
+          const image = new Image();
+          image.onload = () => resolve(image);
+          image.onerror = () => reject(new Error(`无法加载 ${src}`));
+          image.src = src;
+        });
+      }
+
+      function clamp(value, minimum, maximum) {
+        return Math.max(minimum, Math.min(maximum, value));
+      }
+
+      function brightnessColor(value) {
+        const channel = Math.max(0, Math.min(255, Math.round(value)));
+        return `rgb(${channel},${channel},${channel})`;
+      }
+
+      class JavaRandom {
+        constructor(seed) {
+          this.mask = (1n << 48n) - 1n;
+          this.seed = (BigInt(seed) ^ 0x5deece66dn) & this.mask;
+        }
+
+        next(bits) {
+          this.seed = (this.seed * 0x5deece66dn + 0xbn) & this.mask;
+          return Number(this.seed >> BigInt(48 - bits));
+        }
+
+        nextInt(bound) {
+          if ((bound & -bound) === bound) {
+            return Number((BigInt(bound) * BigInt(this.next(31))) >> 31n);
+          }
+          let bits;
+          let value;
+          do {
+            bits = this.next(31);
+            value = bits % bound;
+          } while (bits - value + (bound - 1) > 0x7fffffff);
+          return value;
+        }
+      }
+
+      function available(achievement) {
+        return achievement.parent === null || completed.has(achievement.parent);
+      }
+
+      function localizedName(achievement) {
+        return language === "zh" ? achievement.cn : achievement.name;
+      }
+
+      function localizedDescription(achievement) {
+        return language === "zh" ? achievement.cnDesc : achievement.desc;
+      }
+
+      function achievementStatusText(achievement) {
+        const state = completed.has(achievement.id)
+          ? language === "zh" ? "已完成" : "Completed"
+          : language === "zh" ? "未完成" : "Not completed";
+        const description = localizedDescription(achievement);
+        if (available(achievement)) {
+          return language === "zh"
+            ? `${achievement.cn}（${achievement.name}），${state}。${description}`
+            : `${achievement.name} (${achievement.cn}), ${state}. ${description}`;
+        }
+        const parent = byId.get(achievement.parent);
+        const requirement = language === "zh"
+          ? `需要先完成「${parent.cn}」。`
+          : `Requires '${parent.name}' first.`;
+        return language === "zh"
+          ? `${achievement.cn}（${achievement.name}），${state}。${requirement}`
+          : `${achievement.name} (${achievement.cn}), ${state}. ${requirement}`;
+      }
+
+      function refreshLanguage() {
+        document.documentElement.lang = language === "zh" ? "zh-CN" : "en";
+        languageToggle.textContent = language === "zh" ? "English" : "中文";
+        languageToggle.setAttribute("aria-label", language === "zh" ? "Switch to English" : "切换为中文");
+        languageToggle.setAttribute("aria-pressed", String(language === "zh"));
+        helpText.textContent = language === "zh"
+          ? "点击激活 · 拖拽浏览 · 滚轮滚动 · 悬停或聚焦查看成就"
+          : "Click to activate · Drag to pan · Scroll to browse · Hover or focus to inspect";
+        doneHotspot.setAttribute(
+          "aria-label",
+          language === "zh" ? "完成（重置视图）" : "Done (reset view)"
+        );
+        for (const achievement of achievements) {
+          const hotspot = nodeHotspots.get(achievement.id);
+          if (hotspot) {
+            hotspot.setAttribute("aria-label", achievementStatusText(achievement));
+            hotspot.dataset.completed = String(completed.has(achievement.id));
+            hotspot.dataset.available = String(available(achievement));
+          }
+        }
+      }
+
+      function pulse(now) {
+        return Math.sin(((now % 600) / 600) * Math.PI * 2);
+      }
+
+      function drawTerrainBackground(scrollX, scrollY) {
+        const worldX = Math.floor((scrollX + 288) / 16);
+        const worldY = Math.floor((scrollY + 288) / 16);
+        const offsetX = scrollX + 288 - worldX * 16;
+        const offsetY = scrollY + 288 - worldY * 16;
+        let row = 0;
+
+        while (row * 16 - offsetY < VIEW_H) {
+          const shade = 0.6 - ((worldY + row) / 25) * 0.3;
+          let column = 0;
+          while (column * 16 - offsetX < VIEW_W) {
+            const random = new JavaRandom(1234 + worldX + column);
+            random.nextInt();
+            const choice = random.nextInt(1 + worldY + row) + Math.floor((worldY + row) / 2);
+            let textureIndex;
+
+            if (choice > 37 || worldY + row === 35) {
+              textureIndex = 17;
+            } else if (choice === 22) {
+              textureIndex = random.nextInt(2) === 0 ? 50 : 51;
+            } else if (choice === 10) {
+              textureIndex = 33;
+            } else if (choice === 8) {
+              textureIndex = 34;
+            } else if (choice > 4) {
+              textureIndex = 1;
+            } else if (choice > 0) {
+              textureIndex = 2;
+            } else {
+              textureIndex = 18;
+            }
+
+            const sourceX = (textureIndex % 16) * 16;
+            const sourceY = Math.floor(textureIndex / 16) * 16;
+            ctx.filter = `brightness(${shade})`;
+            ctx.drawImage(
+              assets.terrain,
+              sourceX,
+              sourceY,
+              16,
+              16,
+              VIEW_LEFT + column * 16 - offsetX,
+              VIEW_TOP + row * 16 - offsetY,
+              16,
+              16
+            );
+            column += 1;
+          }
+          row += 1;
+        }
+        ctx.filter = "none";
+      }
+
+      function iconPosition(achievement, scrollX, scrollY) {
+        return {
+          x: VIEW_LEFT + achievement.x * 24 - scrollX - 2,
+          y: VIEW_TOP + achievement.y * 24 - scrollY - 2
+        };
+      }
+
+      function connectorPosition(achievement, scrollX, scrollY) {
+        return {
+          x: VIEW_LEFT + achievement.x * 24 - scrollX + 11,
+          y: VIEW_TOP + achievement.y * 24 - scrollY + 11
+        };
+      }
+
+      function drawConnections(scrollX, scrollY, now) {
+        const pulseValue = pulse(now);
+        for (const achievement of achievements) {
+          if (!achievement.parent) continue;
+          const parent = byId.get(achievement.parent);
+          const childPoint = connectorPosition(achievement, scrollX, scrollY);
+          const parentPoint = connectorPosition(parent, scrollX, scrollY);
+          ctx.fillStyle = completed.has(achievement.id)
+            ? "#707070"
+            : available(achievement)
+              ? `rgba(0,255,0,${pulseValue > 0.6 ? 1 : 0.51})`
+              : "#000000";
+          const left = Math.min(childPoint.x, parentPoint.x);
+          ctx.fillRect(left, childPoint.y, Math.abs(parentPoint.x - childPoint.x) + 1, 1);
+          const top = Math.min(childPoint.y, parentPoint.y);
+          ctx.fillRect(parentPoint.x, top, 1, Math.abs(parentPoint.y - childPoint.y) + 1);
+        }
+      }
+
+      function getDimIcon(id, brightness) {
+        const key = `${id}:${brightness}`;
+        if (dimIconCache.has(key)) return dimIconCache.get(key);
+
+        const output = document.createElement("canvas");
+        output.width = 256;
+        output.height = 256;
+        const outputContext = output.getContext("2d");
+        outputContext.imageSmoothingEnabled = false;
+        outputContext.drawImage(assets.icons[id], 0, 0, 256, 256);
+        if (brightness < 1) {
+          outputContext.globalCompositeOperation = "source-atop";
+          outputContext.fillStyle = `rgba(0,0,0,${1 - brightness})`;
+          outputContext.fillRect(0, 0, 256, 256);
+        }
+        dimIconCache.set(key, output);
+        return output;
+      }
+
+      function drawNodes(scrollX, scrollY, now) {
+        const pulseValue = pulse(now);
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        for (const achievement of achievements) {
+          const availableNow = available(achievement);
+          const bright = completed.has(achievement.id)
+            ? 1
+            : availableNow
+              ? reducedMotion || pulseValue >= 0.6 ? 0.8 : 0.6
+              : 0.3;
+          const position = iconPosition(achievement, scrollX, scrollY);
+          if (
+            position.x < VIEW_LEFT - 26 ||
+            position.y < VIEW_TOP - 26 ||
+            position.x > VIEW_LEFT + VIEW_W ||
+            position.y > VIEW_TOP + VIEW_H
+          ) {
+            continue;
+          }
+          const smoothing = ctx.imageSmoothingEnabled;
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(getDimIcon(achievement.id, bright), position.x, position.y, 26, 26);
+          ctx.imageSmoothingEnabled = smoothing;
+        }
+      }
+
+      function tintedFont(color) {
+        if (tintedFontCache.has(color)) return tintedFontCache.get(color);
+        const tinted = document.createElement("canvas");
+        tinted.width = 128;
+        tinted.height = 128;
+        const tintedContext = tinted.getContext("2d");
+        tintedContext.imageSmoothingEnabled = false;
+        tintedContext.drawImage(assets.font, 0, 0);
+        tintedContext.globalCompositeOperation = "source-in";
+        tintedContext.fillStyle = color;
+        tintedContext.fillRect(0, 0, 128, 128);
+        tintedFontCache.set(color, tinted);
+        return tinted;
+      }
+
+      function characterWidth(character) {
+        const index = fontCharacters.indexOf(character);
+        if (index >= 0) return glyphWidths[index];
+        systemTextContext.font = cjkFont;
+        return Math.ceil(systemTextContext.measureText(character).width);
+      }
+
+      function measureText(text) {
+        let width = 0;
+        for (const character of text) width += characterWidth(character);
+        return width;
+      }
+
+      function drawText(text, x, y, color, shadow) {
+        if (shadow) {
+          drawText(text, x + 1, y + 1, "rgba(0,0,0,0.72)", false);
+        }
+        const atlas = tintedFont(color);
+        let cursor = x;
+        for (const character of text) {
+          const characterIndex = fontCharacters.indexOf(character);
+          if (characterIndex >= 0) {
+            const glyph = 32 + characterIndex;
+            const sourceX = (glyph % 16) * 8;
+            const sourceY = Math.floor(glyph / 16) * 8;
+            ctx.drawImage(atlas, sourceX, sourceY, 8, 8, Math.round(cursor), Math.round(y), 8, 8);
+            cursor += glyphWidths[characterIndex];
+          } else {
+            ctx.save();
+            ctx.font = cjkFont;
+            ctx.textBaseline = "top";
+            ctx.fillStyle = color;
+            ctx.fillText(character, Math.round(cursor), Math.round(y) - 1);
+            ctx.restore();
+            cursor += characterWidth(character);
+          }
+        }
+      }
+
+      function wrapText(text, maxWidth) {
+        const lines = [];
+        for (const paragraph of text.split("\n")) {
+          const words = paragraph.split(" ");
+          let line = "";
+          for (const word of words) {
+            const candidate = line ? `${line} ${word}` : word;
+            if (!line || measureText(candidate) <= maxWidth) {
+              line = candidate;
+            } else {
+              lines.push(line);
+              line = word;
+            }
+          }
+          lines.push(line);
+        }
+        return lines.length ? lines : [""];
+      }
+
+      function drawPanel() {
+        ctx.drawImage(assets.panel, 0, 0, 256, 202, 0, 0, 256, 202);
+      }
+
+      function drawTitle() {
+        drawText(language === "zh" ? "成就" : "Achievements", 15, 5, "#404040", false);
+      }
+
+      function drawDoneButton() {
+        const x = 152;
+        const y = 175;
+        const stateY = 46 + (doneHovered ? 20 : 0);
+        ctx.drawImage(assets.gui, 0, stateY, 40, 20, x, y, 40, 20);
+        ctx.drawImage(assets.gui, 160, stateY, 40, 20, x + 40, y, 40, 20);
+        const text = language === "zh" ? "完成" : "Done";
+        drawText(
+          text,
+          x + 40 - measureText(text) / 2,
+          y + 6,
+          doneHovered ? "#ffffa0" : "#e0e0e0",
+          true
+        );
+      }
+
+      function tooltipAnchor() {
+        if (keyboardId) {
+          const achievement = byId.get(keyboardId);
+          if (!achievement) return null;
+          const scrollX = Math.floor(currentX);
+          const scrollY = Math.floor(currentY);
+          const position = iconPosition(achievement, scrollX, scrollY);
+          return { id: achievement.id, x: position.x + 20, y: position.y + 20 };
+        }
+        if (hoverId && pointerPosition) {
+          return { id: hoverId, x: pointerPosition.x, y: pointerPosition.y };
+        }
+        return null;
+      }
+
+      function drawTooltip(anchor) {
+        const achievement = byId.get(anchor.id);
+        if (!achievement) return;
+
+        const isAvailable = available(achievement);
+        const isCompleted = completed.has(achievement.id);
+        const displayName = localizedName(achievement);
+        const width = Math.max(measureText(displayName), 120);
+        const descriptionLines = isAvailable ? wrapText(localizedDescription(achievement), width) : [];
+        const requirement = achievement.parent
+          ? language === "zh"
+            ? `需要先完成「${byId.get(achievement.parent).cn}」`
+            : `Requires '${byId.get(achievement.parent).name}'`
+          : "";
+        const requirementLines = isAvailable ? [] : wrapText(requirement, width);
+        const bodyLines = isAvailable ? descriptionLines : requirementLines;
+        const bodyHeight = bodyLines.length * 8;
+        const totalHeight = 15 + bodyHeight + (isAvailable && isCompleted ? 12 : 0);
+
+        let x = anchor.x + 12;
+        let y = anchor.y - 4;
+        if (x + width + 6 > SCREEN_W - 2) x = Math.max(3, anchor.x - width - 15);
+        if (y + totalHeight + 6 > SCREEN_H - 2) y = Math.max(3, SCREEN_H - totalHeight - 9);
+
+        ctx.fillStyle = "rgba(0,0,0,0.75)";
+        ctx.fillRect(Math.round(x - 3), Math.round(y - 3), width + 6, totalHeight + 6);
+
+        bodyLines.forEach((line, index) => {
+          drawText(
+            line,
+            x,
+            y + 8 + index * 8,
+            isAvailable ? "#a0a0a0" : "#705050",
+            false
+          );
+        });
+
+        if (isAvailable && isCompleted) {
+          drawText(language === "zh" ? "已获得" : "Taken!", x, y + 8 + bodyHeight + 4, "#9090ff", false);
+        }
+
+        const titleColor = isAvailable
+          ? achievement.special ? "#8080ff" : "#ffffff"
+          : achievement.special ? "#808040" : "#808080";
+        drawText(displayName, x, y, titleColor, true);
+      }
+
+      function updateHotspots(scrollX, scrollY) {
+        for (const achievement of achievements) {
+          const hotspot = nodeHotspots.get(achievement.id);
+          if (!hotspot) continue;
+          const position = iconPosition(achievement, scrollX, scrollY);
+          hotspot.style.left = `${(position.x / SCREEN_W) * 100}%`;
+          hotspot.style.top = `${(position.y / SCREEN_H) * 100}%`;
+          hotspot.style.width = `${(26 / SCREEN_W) * 100}%`;
+          hotspot.style.height = `${(26 / SCREEN_H) * 100}%`;
+        }
+      }
+
+      function render(now) {
+        if (!ready) return;
+        const frameScale = lastFrameTime ? Math.min(32, now - lastFrameTime) / 16.67 : 1;
+        lastFrameTime = now;
+        const easing = 1 - Math.pow(1 - 0.22, frameScale);
+        currentX += (targetX - currentX) * easing;
+        currentY += (targetY - currentY) * easing;
+
+        const scrollX = Math.floor(currentX);
+        const scrollY = Math.floor(currentY);
+        ctx.setTransform(4, 0, 0, 4, 0, 0);
+        ctx.imageSmoothingEnabled = false;
+        ctx.clearRect(0, 0, SCREEN_W, SCREEN_H);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(VIEW_LEFT, VIEW_TOP, VIEW_W, VIEW_H);
+        ctx.clip();
+        drawTerrainBackground(scrollX, scrollY);
+        drawConnections(scrollX, scrollY, now);
+        drawNodes(scrollX, scrollY, now);
+        ctx.restore();
+
+        drawPanel();
+        drawDoneButton();
+        drawTitle();
+
+        const anchor = tooltipAnchor();
+        if (anchor) drawTooltip(anchor);
+        updateHotspots(scrollX, scrollY);
+        requestAnimationFrame(render);
+      }
+
+      function canvasCoordinates(event) {
+        const bounds = canvas.getBoundingClientRect();
+        return {
+          x: ((event.clientX - bounds.left) / bounds.width) * SCREEN_W,
+          y: ((event.clientY - bounds.top) / bounds.height) * SCREEN_H
+        };
+      }
+
+      function findNodeAt(x, y) {
+        if (x < VIEW_LEFT || x >= VIEW_LEFT + VIEW_W || y < VIEW_TOP || y >= VIEW_TOP + VIEW_H) {
+          return null;
+        }
+        const scrollX = Math.floor(currentX);
+        const scrollY = Math.floor(currentY);
+        for (const achievement of achievements) {
+          const position = iconPosition(achievement, scrollX, scrollY);
+          if (
+            x >= position.x + 2 &&
+            x < position.x + 24 &&
+            y >= position.y + 2 &&
+            y < position.y + 24
+          ) {
+            return achievement;
+          }
+        }
+        return null;
+      }
+
+      function updateHover(x, y) {
+        const node = findNodeAt(x, y);
+        hoverId = node ? node.id : null;
+        pointerPosition = node ? { x, y } : null;
+        canvas.style.cursor = dragging
+          ? "grabbing"
+          : node && available(node) && !completed.has(node.id) ? "pointer" : node ? "help" : "grab";
+        if (node) {
+          status.textContent = achievementStatusText(node);
+        }
+      }
+
+      function centerOn(achievement) {
+        targetX = clamp(achievement.x * 24 - VIEW_W / 2 + 12, MIN_SCROLL_X, MAX_SCROLL_X);
+        targetY = clamp(achievement.y * 24 - VIEW_H / 2 + 12, MIN_SCROLL_Y, MAX_SCROLL_Y);
+      }
+
+      function activateAchievement(achievement) {
+        if (completed.has(achievement.id)) {
+          status.textContent = language === "zh"
+            ? `${achievement.cn}已经激活。`
+            : `${achievement.name} is already activated.`;
+          return;
+        }
+        if (!available(achievement)) {
+          const parent = byId.get(achievement.parent);
+          status.textContent = language === "zh"
+            ? `无法激活「${achievement.cn}」，需要先激活「${parent.cn}」。`
+            : `Cannot activate ${achievement.name}; activate ${parent.name} first.`;
+          return;
+        }
+
+        completed.add(achievement.id);
+        refreshLanguage();
+        status.textContent = language === "zh"
+          ? `已激活「${achievement.cn}」。`
+          : `${achievement.name} activated.`;
+      }
+
+      function resetView() {
+        targetX = INITIAL_X;
+        targetY = INITIAL_Y;
+        keyboardId = null;
+        hoverId = null;
+        pointerPosition = null;
+        canvas.focus({ preventScroll: true });
+        status.textContent = language === "zh"
+          ? "已返回成就树中心。"
+          : "Returned to the center of the achievement tree.";
+      }
+
+      function createHotspots() {
+        for (const achievement of achievements) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "node-hotspot";
+          button.setAttribute("aria-label", achievementStatusText(achievement));
+          button.addEventListener("focus", () => {
+            keyboardId = achievement.id;
+            hoverId = null;
+            centerOn(achievement);
+            status.textContent = achievementStatusText(achievement);
+          });
+          button.addEventListener("blur", () => {
+            keyboardId = null;
+          });
+          button.addEventListener("click", () => {
+            activateAchievement(achievement);
+          });
+          hotspotLayer.appendChild(button);
+          nodeHotspots.set(achievement.id, button);
+        }
+      }
+
+      canvas.addEventListener("pointerdown", (event) => {
+        dragging = true;
+        dragMoved = false;
+        dragStart = {
+          x: event.clientX,
+          y: event.clientY,
+          scrollX: targetX,
+          scrollY: targetY
+        };
+        canvas.setPointerCapture(event.pointerId);
+        canvas.classList.add("is-dragging");
+        hoverId = null;
+        pointerPosition = null;
+      });
+
+      canvas.addEventListener("pointermove", (event) => {
+        const point = canvasCoordinates(event);
+        if (dragging && dragStart) {
+          const bounds = canvas.getBoundingClientRect();
+          const dx = ((event.clientX - dragStart.x) / bounds.width) * SCREEN_W;
+          const dy = ((event.clientY - dragStart.y) / bounds.height) * SCREEN_H;
+          if (Math.abs(dx) + Math.abs(dy) > 2) dragMoved = true;
+          targetX = clamp(dragStart.scrollX - dx, MIN_SCROLL_X, MAX_SCROLL_X);
+          targetY = clamp(dragStart.scrollY - dy, MIN_SCROLL_Y, MAX_SCROLL_Y);
+          return;
+        }
+        updateHover(point.x, point.y);
+      });
+
+      canvas.addEventListener("pointerup", (event) => {
+        dragging = false;
+        dragStart = null;
+        canvas.classList.remove("is-dragging");
+        if (!dragMoved) {
+          const point = canvasCoordinates(event);
+          updateHover(point.x, point.y);
+          const node = findNodeAt(point.x, point.y);
+          if (node) activateAchievement(node);
+        }
+        canvas.releasePointerCapture(event.pointerId);
+      });
+
+      canvas.addEventListener("pointercancel", () => {
+        dragging = false;
+        dragStart = null;
+        canvas.classList.remove("is-dragging");
+      });
+
+      canvas.addEventListener("pointerleave", () => {
+        if (!dragging) {
+          hoverId = null;
+          pointerPosition = null;
+        }
+      });
+
+      canvas.addEventListener("wheel", (event) => {
+        event.preventDefault();
+        if (event.shiftKey) {
+          targetX = clamp(targetX + event.deltaY * 0.45, MIN_SCROLL_X, MAX_SCROLL_X);
+        } else {
+          targetY = clamp(targetY + event.deltaY * 0.45, MIN_SCROLL_Y, MAX_SCROLL_Y);
+        }
+      }, { passive: false });
+
+      doneHotspot.addEventListener("pointerenter", () => {
+        doneHovered = true;
+      });
+      doneHotspot.addEventListener("pointerleave", () => {
+        doneHovered = false;
+      });
+      doneHotspot.addEventListener("click", resetView);
+
+      languageToggle.addEventListener("click", () => {
+        language = language === "zh" ? "en" : "zh";
+        refreshLanguage();
+        status.textContent = language === "zh" ? "已切换为中文。" : "Switched to English.";
+      });
+
+      window.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") resetView();
+      });
+
+      Promise.all([
+        loadImage("img/beta-ui/achievement-bg.png"),
+        loadImage("img/beta-ui/font-default.png"),
+        loadImage("img/beta-ui/gui.png"),
+        loadImage("img/beta-ui/terrain.png"),
+        ...achievements.map((achievement) => loadImage(`img/icon_256x/${achievement.id}.png`))
+      ]).then((loaded) => {
+        assets.panel = loaded[0];
+        assets.font = loaded[1];
+        assets.gui = loaded[2];
+        assets.terrain = loaded[3];
+        assets.icons = {};
+        achievements.forEach((achievement, index) => {
+          assets.icons[achievement.id] = loaded[index + 4];
+        });
+        createHotspots();
+        refreshLanguage();
+        ready = true;
+        status.textContent = language === "zh" ? "成就页面已加载。" : "Achievement page loaded.";
+        requestAnimationFrame(render);
+      }).catch((error) => {
+        status.textContent = error.message;
+        console.error(error);
+      });
+    })();
+  </script>
+</body>
+</html>
