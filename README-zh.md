@@ -11,6 +11,7 @@
   <img src="https://img.shields.io/badge/Project%20Poseidon-supported-5865F2" alt="Project Poseidon supported">
   <img src="https://img.shields.io/badge/Java-8-orange" alt="Java 8">
   <img src="https://img.shields.io/badge/Database-SQLite%20%2F%20MySQL-blue" alt="SQLite / MySQL">
+  <a href="https://bstats.org/plugin/bukkit/BetaAchievement/35134"><img src="https://img.shields.io/badge/bStats-35134-00AAFF" alt="bStats"></a>
 </p>
 
 <p align="center"><a href="README.md">English</a> · <b>简体中文</b></p>
@@ -99,6 +100,12 @@ announce:
 
   # Also write unlock messages to the server console. / 是否同时输出到服务器控制台。
   console: true
+
+bstats:
+  # Send anonymous usage statistics. No player names or chat messages are sent.
+  # 发送匿名使用统计；不会发送玩家名或聊天内容。
+  # The global opt-out is plugins/bStats/config.yml. / 全局关闭选项位于 plugins/bStats/config.yml。
+  enabled: true
 
 messages:
   # In-game unlock message. / 游戏内解锁消息。

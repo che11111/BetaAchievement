@@ -6,6 +6,7 @@ import dev.che1s.betaachievement.api.BetaAchievementApi;
 import dev.che1s.betaachievement.command.AchievementCommand;
 import dev.che1s.betaachievement.database.DatabaseManager;
 import dev.che1s.betaachievement.listener.AchievementListener;
+import dev.che1s.betaachievement.metrics.BukkitMetrics;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -17,10 +18,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public final class BetaAchievement extends JavaPlugin {
+    private static final int BSTATS_PLUGIN_ID = 35134;
+
     private AchievementRegistry registry;
     private DatabaseManager database;
     private AchievementService achievements;
     private BetaAchievementApi api;
+    private BukkitMetrics metrics;
 
     @Override
     public void onEnable() {
@@ -32,6 +36,8 @@ public final class BetaAchievement extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
+
+        startMetrics();
 
         registry = new AchievementRegistry();
         database = new DatabaseManager(this);
@@ -69,6 +75,20 @@ public final class BetaAchievement extends JavaPlugin {
                 getServer().getPluginManager().disablePlugin(BetaAchievement.this);
             }
         });
+    }
+
+    private void startMetrics() {
+        if (!getConfiguration().getBoolean("bstats.enabled", true)) {
+            return;
+        }
+        try {
+            metrics = new BukkitMetrics(this, BSTATS_PLUGIN_ID);
+        } catch (Exception | LinkageError exception) {
+            metrics = null;
+            getServer().getLogger().warning(
+                "Could not initialize bStats: " + exception.getMessage()
+            );
+        }
     }
 
     private void copyDefaultResources() {
@@ -111,6 +131,9 @@ public final class BetaAchievement extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (metrics != null) {
+            metrics.shutdown();
+        }
         if (achievements != null) {
             achievements.shutdown();
         }

@@ -38,6 +38,12 @@ announce:
   # Also write unlock messages to the server console. / 是否同时输出到服务器控制台。
   console: true
 
+bstats:
+  # Send anonymous usage statistics. No player names or chat messages are sent.
+  # 发送匿名使用统计；不会发送玩家名或聊天内容。
+  # The global opt-out is plugins/bStats/config.yml. / 全局关闭选项位于 plugins/bStats/config.yml。
+  enabled: true
+
 messages:
   # In-game unlock message. / 游戏内解锁消息。
   # Supports & color codes, {player} and the English {achievement}. / 支持 & 颜色代码及玩家、英文成就名变量。

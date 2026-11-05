@@ -11,6 +11,7 @@
   <img src="https://img.shields.io/badge/Project%20Poseidon-supported-5865F2" alt="Project Poseidon supported">
   <img src="https://img.shields.io/badge/Java-8-orange" alt="Java 8">
   <img src="https://img.shields.io/badge/Database-SQLite%20%2F%20MySQL-blue" alt="SQLite / MySQL">
+  <a href="https://bstats.org/plugin/bukkit/BetaAchievement/35134"><img src="https://img.shields.io/badge/bStats-35134-00AAFF" alt="bStats"></a>
 </p>
 
 <p align="center"><b>English</b> · <a href="https://github.com/che11111/BetaAchievement/blob/main/README-zh.md">简体中文</a></p>
@@ -89,6 +90,10 @@ runs:
 announce:
   broadcast: true
   console: true
+
+bstats:
+  # Send anonymous usage statistics. No player names or chat messages are sent.
+  enabled: true
 
 messages:
   achievement-unlocked: '&6Achievement Get! &f{player} &eunlocked &f{achievement}'
