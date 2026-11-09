@@ -5,7 +5,7 @@
 
   <groupId>dev.che1s</groupId>
   <artifactId>BetaAchievement</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
 
   <developers>
     <developer>
@@ -46,7 +46,7 @@
   </dependencies>
 
   <build>
-    <finalName>BetaAchievement-1.0.0</finalName>
+    <finalName>BetaAchievement-${project.version}</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

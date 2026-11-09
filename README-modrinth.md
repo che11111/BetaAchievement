@@ -66,6 +66,10 @@ Normal gameplay requires parent achievements. `/ach grant` automatically grants 
 The configuration file is `plugins/BetaAchievement/config.yml`.
 
 ```yaml
+language:
+  # auto, zh, or en. In-game messages are always English.
+  console: auto
+
 database:
   # When false, achievements are kept in memory and lost on restart.
   enabled: true
@@ -94,11 +98,9 @@ announce:
 bstats:
   # Send anonymous usage statistics. No player names or chat messages are sent.
   enabled: true
-
-messages:
-  achievement-unlocked: '&6Achievement Get! &f{player} &eunlocked &f{achievement}'
-  no-permission: '&cYou don''t have permission.'
 ```
+
+In-game messages always use the ASCII-only `lang/game.yml`, because Beta 1.7.3 clients cannot render languages other than English. Console logs and console command replies automatically use `lang/console-zh.yml` or `lang/console-en.yml` according to `language.console`; `auto` follows the server JVM language.
 
 ## Achievement Runs
 

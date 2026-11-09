@@ -1,0 +1,179 @@
+# BetaAchievement in-game messages.
+# Beta 1.7.3 clients cannot render Chinese. Keep this file ASCII/English only.
+# Supports & color codes and named placeholders such as {player} and {achievement}.
+
+prefix: ""
+
+achievements:
+  openInventory: { name: "Taking Inventory" }
+  mineWood: { name: "Getting Wood" }
+  buildWorkBench: { name: "Benchmarking" }
+  buildPickaxe: { name: "Time to Mine!" }
+  buildFurnace: { name: "Hot Topic" }
+  acquireIron: { name: "Acquire Hardware" }
+  buildHoe: { name: "Time to Farm!" }
+  makeBread: { name: "Bake Bread" }
+  bakeCake: { name: "The Lie" }
+  buildBetterPickaxe: { name: "Getting an Upgrade" }
+  cookFish: { name: "Delicious Fish" }
+  onARail: { name: "On A Rail" }
+  buildSword: { name: "Time to Strike!" }
+  killEnemy: { name: "Monster Hunter" }
+  killCow: { name: "Cow Tipper" }
+  flyPig: { name: "When Pigs Fly" }
+
+startup:
+  ready: "Enabled with all 16 Beta 1.7.3 achievement definitions."
+  storage-required: "BetaAchievement is disabled: persistent storage must be available."
+  config-load-failed: "Could not load config.yml: {error}"
+  command-register-failed: "Could not register plugin commands."
+  bstats-failed: "Could not initialize bStats: {error}"
+  resource-create-failed: "Could not create {file}: {error}"
+
+database:
+  disabled: "Database disabled: achievements will not be authoritative or persistent."
+  start-failed: "Cannot start {type}: {error}"
+  task-rejected: "Database task rejected: storage is stopping."
+  shutdown-timeout: "Database writes did not finish within {seconds} seconds."
+  invalid-type: "database.type must be sqlite or mysql"
+  invalid-prefix: "database.table-prefix must contain 1-40 letters, digits or underscores"
+  pool-exhausted: "Database pool exhausted"
+  current-run-open: "Current run is still {status}"
+  run-not-found: "Run not found: {run}"
+  terminal-status-required: "Run status must be terminal"
+  inserted-run-unreadable: "Inserted run could not be read back"
+
+error:
+  database-not-ready: "Database is not ready"
+  database-stopping: "Database is stopping"
+  unknown-player: "Unknown player name: {player}"
+
+achievement:
+  load-retry: "Could not load achievements for {player} (attempt {attempt}/{max}): {error}"
+  load-failed: "Could not load achievements for {player} after {max} attempts: {error}"
+  player-load-failed: "&cAchievements could not be loaded. Please reconnect."
+  unlocked: "&6Achievement Get! &f{player} &eunlocked &f{achievement}"
+  unlocked-console: "[Achievement] {player} unlocked {achievement}"
+  expired: "&eRun #{run} expired after {hours} hours and was deleted."
+  expire-failed: "Could not expire achievement runs: {error}"
+  refresh-failed: "Could not refresh expired run for {player}: {error}"
+  save-progress-failed: "Could not save run progress for {player}: {error}"
+  queue-progress-failed: "Could not queue run progress for {player}."
+  next-run-failed: "Could not create next run for {player}: {error}"
+  abandon-failed: "Could not abandon run: {error}"
+  reset-failed: "Could not reset achievements for {player}: {error}"
+  revoke-failed: "Could not revoke {achievement}: {error}"
+
+status:
+  ready: "READY"
+  active: "ACTIVE"
+  completed: "COMPLETED"
+  invalid: "INVALID"
+  abandoned: "ABANDONED"
+
+debug:
+  format: "&8[AchievementDebug] &f{message}"
+  unknown-id: "Unknown achievement ID: {achievement}"
+  state-missing: "Player state is not loaded (the player has not joined or been loaded)."
+  data-failed: "Achievement data failed to load; trigger ignored."
+  loading: "Player data is still loading; debug trigger was not recorded."
+  already-unlocked: "Triggered {achievement}, but it is already complete in this run."
+  triggered: "[OK] Triggered {achievement} ({id}); debug ignored prerequisites and did not write to the database."
+  damage: "Damage source={source}, target={target} (id={id}), monster={monster}"
+  death: "Death event={target} (id={id}), attack record exists ({age}ms old){expired}"
+  expired-suffix: ", timed out"
+
+command:
+  storage-initializing: "&eAchievement storage is still initializing."
+  console-check-usage: "Console: /{label} check <player>"
+  admin-usage: "/{label} <grant|grantall|revoke|reset> <player> [achievement]"
+  player-online: "&cPlayer must be online."
+  player-data-load-failed: "&c{player}'s achievement data failed to load."
+  state-unavailable: "&cPlayer achievement state is unavailable."
+  unknown-action: "&cUnknown action. Use run, pb, top, grant, grantall, revoke, reset or debug."
+  missing-achievement: "&cMissing achievement ID."
+  unknown-achievement: "&cUnknown Beta achievement ID."
+  no-permission: "&cYou do not have permission."
+
+reset:
+  queued: "&eReset and next run queued."
+  applied: "Reset {player}; history was preserved."
+
+grant-all:
+  queued: "&eGrant-all queued until data loads."
+  none: "No missing achievements were granted."
+  applied: "Granted {count} achievement(s) to {player}. This run is invalid for rankings."
+
+grant:
+  applied: "Granted {achievement}. Current run is invalid for rankings."
+  queued: "&eGrant queued until data loads."
+  already: "{achievement} is already granted in this run."
+
+revoke:
+  applied: "Revoked {achievement}. Current run is invalid for rankings."
+  queued: "&eRevoke queued until data loads."
+  not-granted: "{achievement} is not granted in this run."
+
+run:
+  player-only: "&cThis command can only be used by a player."
+  loading-retry: "&eAchievements are still loading; try again."
+  data-failed: "&cAchievement data failed to load."
+  next-requires-completion: "&cComplete your first full 16/16 run before starting another."
+  next-queued: "&eNext run is being created..."
+  next-created: "&aNext run created. Progress reset to 0/16."
+  next-current-open: "&cComplete or close the current run before starting another."
+  state-unavailable: "&cRun state is unavailable."
+  abandon-requires-completion: "&cComplete your first full 16/16 run before abandoning a race."
+  abandon-queued: "&eAbandon request queued."
+  abandon-applied: "&eCurrent run abandoned. History was preserved."
+  abandon-none: "&cThere is no active repeat run to abandon."
+  usage: "Usage: /{label} run <info|next|abandon|history>"
+
+history:
+  player-only: "&cThis command can only be used by a player."
+  header: "&6Achievement run history"
+  empty: "&7No runs recorded."
+  entry: "&e#{run} &7{status}&f  {time}"
+  in-progress: "in progress"
+  failed: "&cCould not read run history."
+
+info:
+  player-only: "&cThis command can only be used by a player."
+  loading: "&eAchievements are loading..."
+  load-failed: "&cAchievements failed to load. Please reconnect."
+  no-run: "&cNo current achievement run."
+  header: "&6Achievement Run #{run} &7[{status}]"
+  progress: "&eProgress: {completed}/{total}&7  Elapsed: {elapsed}"
+  final: "&aFinal time: {time}"
+  expires: "&cThis run is deleted if unfinished after {time}."
+  split: "&7{sequence}. &f{achievement}&e  +{split}&7  total {total}"
+
+pb:
+  console-usage: "Console: /{label} pb <player>"
+  empty: "&e{player} has no completed run."
+  result: "&a{player} PB: {time}&7 (run #{run}, {source})"
+  failed: "&cCould not read personal best."
+
+top:
+  invalid-size: "&cLeaderboard size must be a number."
+  header: "&6Unlimited Achievement Race - Top {count}"
+  empty: "&7No completed runs yet."
+  entry: "&e{rank}. &f{player}&7  {time}  run #{run}  {source}"
+  failed: "&cCould not read leaderboard."
+
+debug-command:
+  player-only: "&cThis command can only be used by a player."
+  not-active: "Debug was not active."
+  stopped: "Debug stopped for {player}."
+  started: "&eNow debugging {achievement} ({id}). Parent requirements ignored; completions are not saved. Stop with /{label} debug."
+
+check:
+  usage: "Usage: /{label} check <player>"
+
+progress:
+  header: "&6Beta 1.7.3 Achievements - {player}  Run #{run}"
+  progress: "&eProgress: {completed}/{total} ({percent}%)&7  Elapsed: {elapsed}"
+  completed: "&aCompleted:"
+  not-completed: "&cNot completed:"
+  completed-entry: "&a[+] {achievement}&7 ({id})"
+  missing-entry: "&c[-] {achievement}&7 ({id})"

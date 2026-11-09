@@ -64,6 +64,11 @@ The configuration file is `plugins/BetaAchievement/config.yml`. The complete con
 # Restart the server after changing this file.
 # Back up achievements.db or the MySQL database before upgrading.
 
+language:
+  # Console language: auto, zh or en.
+  # auto follows the server JVM language; in-game messages are always English.
+  console: auto
+
 database:
   # Enable persistent storage.
   # When false, achievements are kept in memory and lost on restart.
@@ -105,19 +110,22 @@ bstats:
   # Send anonymous usage statistics. No player names or chat messages are sent.
   # The global opt-out is plugins/bStats/config.yml.
   enabled: true
-
-messages:
-  # In-game unlock message.
-  # Supports & color codes, {player}, and the English {achievement}.
-  achievement-unlocked: '&6Achievement Get! &f{player} &eunlocked &f{achievement}'
-
-  # Console unlock message.
-  # {player} is the player name.
-  achievement-unlocked-console: '[成就] {player} 获得了成就「{achievement}」'
-
-  # Message shown when a player lacks permission.
-  no-permission: '&cYou don''t have permission.'
 ```
+
+## Messages and Languages
+
+Beta 1.7.3 clients cannot render languages other than English, so all player chat, command replies, and achievement unlock notices always come from `plugins/BetaAchievement/lang/game.yml`. That file must contain English and ASCII text only.
+
+Console messages use:
+
+```text
+lang/console-zh.yml
+lang/console-en.yml
+```
+
+Set `language.console` to `auto`, `zh`, or `en`. In `auto` mode, the plugin reads the server JVM's `user.language` property and selects Chinese for Chinese environments, otherwise English. This applies to backend logs, warnings, errors, and command replies produced by the server console.
+
+The language files are copied into the plugin data directory on first startup and should be edited there. Restart the server after changing them. All three files use the same message keys and support `&` color codes plus named placeholders such as `{player}`, `{achievement}`, and `{error}`.
 
 ## Achievement Runs
 

@@ -165,9 +165,16 @@ public final class AchievementListener implements Listener {
         if (plugin.getAchievements().isDebugging(attacker, "killEnemy")) {
             plugin.getAchievements().debug(
                 attacker,
-                "伤害来源=" + damageEvent.getDamager().getClass().getSimpleName()
-                    + "，目标=" + victim.getClass().getSimpleName()
-                    + " (id=" + victim.getEntityId() + ")，是否怪物=" + monster
+                "debug.damage",
+                "Damage source={source}, target={target} (id={id}), monster={monster}",
+                "source",
+                damageEvent.getDamager().getClass().getSimpleName(),
+                "target",
+                victim.getClass().getSimpleName(),
+                "id",
+                Integer.toString(victim.getEntityId()),
+                "monster",
+                Boolean.toString(monster)
             );
         }
         if (!monster) {
@@ -209,11 +216,24 @@ public final class AchievementListener implements Listener {
         long age = System.currentTimeMillis() - record.time;
         Player killer = record.player;
         if (plugin.getAchievements().isDebugging(killer, "killEnemy")) {
+            boolean expired = age > 30000L;
             plugin.getAchievements().debug(
                 killer,
-                "死亡事件=" + event.getEntity().getClass().getSimpleName()
-                    + " (id=" + event.getEntity().getEntityId() + ")，攻击记录存在（"
-                    + age + "ms 前）" + (age > 30000L ? "，已超时" : "")
+                "debug.death",
+                "Death event={target} (id={id}), attack record exists ({age}ms old){expired}",
+                "target",
+                event.getEntity().getClass().getSimpleName(),
+                "id",
+                Integer.toString(event.getEntity().getEntityId()),
+                "age",
+                Long.toString(age),
+                "expired",
+                expired
+                    ? plugin.getLanguage().gameValue(
+                        "debug.expired-suffix",
+                        ", timed out"
+                    )
+                    : ""
             );
         }
         if (age > 30000L) {

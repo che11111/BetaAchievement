@@ -8,7 +8,6 @@ import dev.che1s.betaachievement.run.RunLeaderboardEntry;
 import dev.che1s.betaachievement.run.RunProgressEntry;
 import dev.che1s.betaachievement.run.RunQueryCallback;
 import dev.che1s.betaachievement.run.RunStatus;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -28,15 +27,23 @@ public final class AchievementCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!plugin.isReady()) {
-            sender.sendMessage(ChatColor.YELLOW + "Achievement storage is still initializing.");
+            msg(
+                sender,
+                "command.storage-initializing",
+                "&eAchievement storage is still initializing."
+            );
             return true;
         }
         if (args.length == 0) {
             if (sender instanceof Player) {
                 return showProgress(sender, (Player) sender);
             }
-            sender.sendMessage(
-                "Console: /" + label + " check <player>"
+            msg(
+                sender,
+                "command.console-check-usage",
+                "Console: /{label} check <player>",
+                "label",
+                label
             );
             return true;
         }
@@ -61,17 +68,29 @@ public final class AchievementCommand implements CommandExecutor {
             return leaderboard(sender, args);
         }
         if (args.length < 2) {
-            sender.sendMessage("/" + label + " <grant|grantall|revoke|reset> <player> [achievement]");
+            msg(
+                sender,
+                "command.admin-usage",
+                "/{label} <grant|grantall|revoke|reset> <player> [achievement]",
+                "label",
+                label
+            );
             return true;
         }
 
         Player target = plugin.getServer().getPlayer(args[1]);
         if (target == null) {
-            sender.sendMessage(ChatColor.RED + "Player must be online.");
+            msg(sender, "command.player-online", "&cPlayer must be online.");
             return true;
         }
         if (plugin.getAchievements().isLoadFailed(target)) {
-            sender.sendMessage(ChatColor.RED + target.getName() + "'s achievement data failed to load.");
+            msg(
+                sender,
+                "command.player-data-load-failed",
+                "&c{player}'s achievement data failed to load.",
+                "player",
+                target.getName()
+            );
             return true;
         }
 
@@ -81,11 +100,21 @@ public final class AchievementCommand implements CommandExecutor {
             }
             AchievementService.Action result = plugin.getAchievements().reset(target);
             if (result == AchievementService.Action.QUEUED) {
-                sender.sendMessage(ChatColor.YELLOW + "Reset and next run queued.");
+                msg(sender, "reset.queued", "&eReset and next run queued.");
             } else if (result == AchievementService.Action.APPLIED) {
-                sender.sendMessage("Reset " + target.getName() + "; history was preserved.");
+                msg(
+                    sender,
+                    "reset.applied",
+                    "Reset {player}; history was preserved.",
+                    "player",
+                    target.getName()
+                );
             } else {
-                sender.sendMessage(ChatColor.RED + "Player achievement state is unavailable.");
+                msg(
+                    sender,
+                    "command.state-unavailable",
+                    "&cPlayer achievement state is unavailable."
+                );
             }
             return true;
         }
@@ -95,32 +124,38 @@ public final class AchievementCommand implements CommandExecutor {
             }
             int count = plugin.getAchievements().grantAll(target);
             if (count < 0) {
-                sender.sendMessage(ChatColor.YELLOW + "Grant-all queued until data loads.");
+                msg(sender, "grant-all.queued", "&eGrant-all queued until data loads.");
             } else if (count == 0) {
-                sender.sendMessage("No missing achievements were granted.");
+                msg(sender, "grant-all.none", "No missing achievements were granted.");
             } else {
-                sender.sendMessage(
-                    "Granted " + count + " achievement(s) to " + target.getName()
-                        + ". This run is invalid for rankings."
+                msg(
+                    sender,
+                    "grant-all.applied",
+                    "Granted {count} achievement(s) to {player}. This run is invalid for rankings.",
+                    "count",
+                    Integer.toString(count),
+                    "player",
+                    target.getName()
                 );
             }
             return true;
         }
         if (!"grant".equals(action) && !"revoke".equals(action)) {
-            sender.sendMessage(
-                ChatColor.RED
-                    + "Unknown action. Use run, pb, top, grant, grantall, revoke, reset or debug."
+            msg(
+                sender,
+                "command.unknown-action",
+                "&cUnknown action. Use run, pb, top, grant, grantall, revoke, reset or debug."
             );
             return true;
         }
         if (args.length < 3) {
-            sender.sendMessage("Missing achievement ID.");
+            msg(sender, "command.missing-achievement", "&cMissing achievement ID.");
             return true;
         }
 
         AchievementDefinition achievement = plugin.getRegistry().get(args[2]);
         if (achievement == null) {
-            sender.sendMessage("Unknown Beta achievement ID.");
+            msg(sender, "command.unknown-achievement", "&cUnknown Beta achievement ID.");
             return true;
         }
 
@@ -134,15 +169,29 @@ public final class AchievementCommand implements CommandExecutor {
                 true
             );
             if (result == AchievementService.Action.APPLIED) {
-                sender.sendMessage(
-                    "Granted " + achievement.getName() + ". Current run is invalid for rankings."
+                msg(
+                    sender,
+                    "grant.applied",
+                    "Granted {achievement}. Current run is invalid for rankings.",
+                    "achievement",
+                    plugin.getLanguage().achievementName(sender, achievement)
                 );
             } else if (result == AchievementService.Action.QUEUED) {
-                sender.sendMessage(ChatColor.YELLOW + "Grant queued until data loads.");
+                msg(sender, "grant.queued", "&eGrant queued until data loads.");
             } else if (result == AchievementService.Action.IGNORED) {
-                sender.sendMessage(achievement.getName() + " is already granted in this run.");
+                msg(
+                    sender,
+                    "grant.already",
+                    "{achievement} is already granted in this run.",
+                    "achievement",
+                    plugin.getLanguage().achievementName(sender, achievement)
+                );
             } else {
-                sender.sendMessage(ChatColor.RED + "Player achievement state is unavailable.");
+                msg(
+                    sender,
+                    "command.state-unavailable",
+                    "&cPlayer achievement state is unavailable."
+                );
             }
             return true;
         }
@@ -152,22 +201,40 @@ public final class AchievementCommand implements CommandExecutor {
         }
         AchievementService.Action result = plugin.getAchievements().revoke(target, achievement.getId());
         if (result == AchievementService.Action.APPLIED) {
-            sender.sendMessage(
-                "Revoked " + achievement.getName() + ". Current run is invalid for rankings."
+            msg(
+                sender,
+                "revoke.applied",
+                "Revoked {achievement}. Current run is invalid for rankings.",
+                "achievement",
+                plugin.getLanguage().achievementName(sender, achievement)
             );
         } else if (result == AchievementService.Action.QUEUED) {
-            sender.sendMessage(ChatColor.YELLOW + "Revoke queued until data loads.");
+            msg(sender, "revoke.queued", "&eRevoke queued until data loads.");
         } else if (result == AchievementService.Action.IGNORED) {
-            sender.sendMessage(achievement.getName() + " is not granted in this run.");
+            msg(
+                sender,
+                "revoke.not-granted",
+                "{achievement} is not granted in this run.",
+                "achievement",
+                plugin.getLanguage().achievementName(sender, achievement)
+            );
         } else {
-            sender.sendMessage(ChatColor.RED + "Player achievement state is unavailable.");
+            msg(
+                sender,
+                "command.state-unavailable",
+                "&cPlayer achievement state is unavailable."
+            );
         }
         return true;
     }
 
     private boolean run(CommandSender sender, String[] args, String label) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Run commands are player-only.");
+            msg(
+                sender,
+                "run.player-only",
+                "&cThis command can only be used by a player."
+            );
             return true;
         }
         Player player = (Player) sender;
@@ -178,57 +245,67 @@ public final class AchievementCommand implements CommandExecutor {
         }
         if ("next".equals(subcommand)) {
             if (plugin.getAchievements().isLoading(player)) {
-                sender.sendMessage(ChatColor.YELLOW + "Achievements are still loading; try again.");
+                msg(sender, "run.loading-retry", "&eAchievements are still loading; try again.");
                 return true;
             }
             if (plugin.getAchievements().isLoadFailed(player)) {
-                sender.sendMessage(ChatColor.RED + "Achievement data failed to load.");
+                msg(sender, "run.data-failed", "&cAchievement data failed to load.");
                 return true;
             }
             if (!plugin.getAchievements().hasCompletedRun(player)) {
-                sender.sendMessage(
-                    ChatColor.RED + "Complete your first full 16/16 run before starting another."
+                msg(
+                    sender,
+                    "run.next-requires-completion",
+                    "&cComplete your first full 16/16 run before starting another."
                 );
                 return true;
             }
             AchievementService.Action result = plugin.getAchievements().nextRun(player);
             if (result == AchievementService.Action.QUEUED) {
-                sender.sendMessage(ChatColor.YELLOW + "Next run is being created...");
+                msg(sender, "run.next-queued", "&eNext run is being created...");
             } else if (result == AchievementService.Action.APPLIED) {
-                sender.sendMessage(ChatColor.GREEN + "Next run created. Progress reset to 0/16.");
+                msg(sender, "run.next-created", "&aNext run created. Progress reset to 0/16.");
             } else if (result == AchievementService.Action.IGNORED) {
-                sender.sendMessage(
-                    ChatColor.RED + "Complete or close the current run before starting another."
+                msg(
+                    sender,
+                    "run.next-current-open",
+                    "&cComplete or close the current run before starting another."
                 );
             } else {
-                sender.sendMessage(ChatColor.RED + "Run state is unavailable.");
+                msg(sender, "run.state-unavailable", "&cRun state is unavailable.");
             }
             return true;
         }
         if ("abandon".equals(subcommand)) {
             if (plugin.getAchievements().isLoading(player)) {
-                sender.sendMessage(ChatColor.YELLOW + "Achievements are still loading; try again.");
+                msg(sender, "run.loading-retry", "&eAchievements are still loading; try again.");
                 return true;
             }
             if (plugin.getAchievements().isLoadFailed(player)) {
-                sender.sendMessage(ChatColor.RED + "Achievement data failed to load.");
+                msg(sender, "run.data-failed", "&cAchievement data failed to load.");
                 return true;
             }
             if (!plugin.getAchievements().hasCompletedRun(player)) {
-                sender.sendMessage(
-                    ChatColor.RED + "Complete your first full 16/16 run before abandoning a race."
+                msg(
+                    sender,
+                    "run.abandon-requires-completion",
+                    "&cComplete your first full 16/16 run before abandoning a race."
                 );
                 return true;
             }
             AchievementService.Action result = plugin.getAchievements().abandonRun(player);
             if (result == AchievementService.Action.QUEUED) {
-                sender.sendMessage(ChatColor.YELLOW + "Abandon request queued.");
+                msg(sender, "run.abandon-queued", "&eAbandon request queued.");
             } else if (result == AchievementService.Action.APPLIED) {
-                sender.sendMessage(ChatColor.YELLOW + "Current run abandoned. History was preserved.");
+                msg(
+                    sender,
+                    "run.abandon-applied",
+                    "&eCurrent run abandoned. History was preserved."
+                );
             } else if (result == AchievementService.Action.IGNORED) {
-                sender.sendMessage(ChatColor.RED + "There is no active repeat run to abandon.");
+                msg(sender, "run.abandon-none", "&cThere is no active repeat run to abandon.");
             } else {
-                sender.sendMessage(ChatColor.RED + "Run state is unavailable.");
+                msg(sender, "run.state-unavailable", "&cRun state is unavailable.");
             }
             return true;
         }
@@ -236,13 +313,23 @@ public final class AchievementCommand implements CommandExecutor {
             return runHistory(sender);
         }
 
-        sender.sendMessage("Usage: /" + label + " run <info|next|abandon|history>");
+        msg(
+            sender,
+            "run.usage",
+            "Usage: /{label} run <info|next|abandon|history>",
+            "label",
+            label
+        );
         return true;
     }
 
     private boolean runHistory(CommandSender sender) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Run history is player-only.");
+            msg(
+                sender,
+                "history.player-only",
+                "&cThis command can only be used by a player."
+            );
             return true;
         }
         Player player = (Player) sender;
@@ -252,25 +339,34 @@ public final class AchievementCommand implements CommandExecutor {
             10,
             new RunQueryCallback<List<AchievementRun>>() {
                 public void onResult(List<AchievementRun> runs) {
-                    output.sendMessage(ChatColor.GOLD + "Achievement run history");
+                    msg(output, "history.header", "&6Achievement run history");
                     if (runs.isEmpty()) {
-                        output.sendMessage(ChatColor.GRAY + "No runs recorded.");
+                        msg(output, "history.empty", "&7No runs recorded.");
                         return;
                     }
                     for (AchievementRun run : runs) {
-                        output.sendMessage(
-                            ChatColor.YELLOW + "#" + run.getRunNumber() + " "
-                                + ChatColor.GRAY + run.getStatus()
-                                + ChatColor.WHITE + "  "
-                                + (run.getDurationMs() == null
-                                    ? "in progress"
-                                    : formatDuration(run.getDurationMs()))
+                        msg(
+                            output,
+                            "history.entry",
+                            "&e#{run} &7{status}&f  {time}",
+                            "run",
+                            Integer.toString(run.getRunNumber()),
+                            "status",
+                            status(sender, run.getStatus()),
+                            "time",
+                            run.getDurationMs() == null
+                                ? plugin.getLanguage().value(
+                                    sender,
+                                    "history.in-progress",
+                                    "in progress"
+                                )
+                                : formatDuration(run.getDurationMs())
                         );
                     }
                 }
 
                 public void onFailure(Exception exception) {
-                    output.sendMessage(ChatColor.RED + "Could not read run history.");
+                    msg(output, "history.failed", "&cCould not read run history.");
                 }
             }
         );
@@ -279,37 +375,60 @@ public final class AchievementCommand implements CommandExecutor {
 
     private boolean runInfo(CommandSender sender, String label) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Console: /" + label + " run is player-only.");
+            msg(
+                sender,
+                "info.player-only",
+                "&cThis command can only be used by a player."
+            );
             return true;
         }
         Player player = (Player) sender;
         if (plugin.getAchievements().isLoading(player)) {
-            sender.sendMessage(ChatColor.YELLOW + "Achievements are loading...");
+            msg(sender, "info.loading", "&eAchievements are loading...");
             return true;
         }
         if (plugin.getAchievements().isLoadFailed(player)) {
-            sender.sendMessage(ChatColor.RED + "Achievements failed to load. Please reconnect.");
+            msg(
+                sender,
+                "info.load-failed",
+                "&cAchievements failed to load. Please reconnect."
+            );
             return true;
         }
 
         AchievementRun run = plugin.getAchievements().getCurrentRun(player);
         if (run == null) {
-            sender.sendMessage(ChatColor.RED + "No current achievement run.");
+            msg(sender, "info.no-run", "&cNo current achievement run.");
             return true;
         }
         int completed = plugin.getAchievements().get(player).size();
-        sender.sendMessage(
-            ChatColor.GOLD + "Achievement Run #" + run.getRunNumber()
-                + ChatColor.GRAY + " [" + run.getStatus() + "]"
+        msg(
+            sender,
+            "info.header",
+            "&6Achievement Run #{run} &7[{status}]",
+            "run",
+            Integer.toString(run.getRunNumber()),
+            "status",
+            status(sender, run.getStatus())
         );
-        sender.sendMessage(
-            ChatColor.YELLOW + "Progress: " + completed + "/16"
-                + ChatColor.GRAY + "  Elapsed: "
-                + formatDuration(plugin.getAchievements().getCurrentElapsedMs(player))
+        msg(
+            sender,
+            "info.progress",
+            "&eProgress: {completed}/{total}&7  Elapsed: {elapsed}",
+            "completed",
+            Integer.toString(completed),
+            "total",
+            Integer.toString(plugin.getRegistry().all().size()),
+            "elapsed",
+            formatDuration(plugin.getAchievements().getCurrentElapsedMs(player))
         );
         if (run.getDurationMs() != null) {
-            sender.sendMessage(
-                ChatColor.GREEN + "Final time: " + formatDuration(run.getDurationMs())
+            msg(
+                sender,
+                "info.final",
+                "&aFinal time: {time}",
+                "time",
+                formatDuration(run.getDurationMs())
             );
         } else if (run.getStatus() == RunStatus.ACTIVE
             && run.getRunNumber() > 1
@@ -317,21 +436,33 @@ public final class AchievementCommand implements CommandExecutor {
             int timeoutHours = plugin.getConfiguration().getInt("runs.repeat-timeout-hours", 12);
             if (timeoutHours > 0) {
                 long deadline = run.getStartedAtMs() + timeoutHours * 60L * 60L * 1000L;
-                sender.sendMessage(
-                    ChatColor.RED + "This run is deleted if unfinished after "
-                        + formatDuration(Math.max(0L, deadline - System.currentTimeMillis()))
+                msg(
+                    sender,
+                    "info.expires",
+                    "&cThis run is deleted if unfinished after {time}.",
+                    "time",
+                    formatDuration(Math.max(0L, deadline - System.currentTimeMillis()))
                 );
             }
         }
 
         for (RunProgressEntry entry : plugin.getAchievements().getCachedSplits(player)) {
             AchievementDefinition achievement = plugin.getRegistry().get(entry.getAchievementId());
-            String name = achievement == null ? entry.getAchievementId() : achievement.getName();
-            sender.sendMessage(
-                ChatColor.GRAY + String.format(Locale.US, "%2d. ", entry.getSequence())
-                    + ChatColor.WHITE + name
-                    + ChatColor.YELLOW + "  +" + formatDuration(entry.getSplitMs())
-                    + ChatColor.GRAY + "  total " + formatDuration(entry.getElapsedMs())
+            String name = achievement == null
+                ? entry.getAchievementId()
+                : plugin.getLanguage().achievementName(sender, achievement);
+            msg(
+                sender,
+                "info.split",
+                "&7{sequence}. &f{achievement}&e  +{split}&7  total {total}",
+                "sequence",
+                String.format(Locale.US, "%2d", entry.getSequence()),
+                "achievement",
+                name,
+                "split",
+                formatDuration(entry.getSplitMs()),
+                "total",
+                formatDuration(entry.getElapsedMs())
             );
         }
         return true;
@@ -342,7 +473,7 @@ public final class AchievementCommand implements CommandExecutor {
         if (args.length >= 2) {
             target = plugin.getServer().getPlayer(args[1]);
             if (target == null) {
-                sender.sendMessage(ChatColor.RED + "Player must be online.");
+                msg(sender, "command.player-online", "&cPlayer must be online.");
                 return true;
             }
             if (!allow(sender, "betaachievement.view.others")) {
@@ -351,7 +482,13 @@ public final class AchievementCommand implements CommandExecutor {
         } else if (sender instanceof Player) {
             target = (Player) sender;
         } else {
-            sender.sendMessage("Console: /ach pb <player>");
+            msg(
+                sender,
+                "pb.console-usage",
+                "Console: /{label} pb <player>",
+                "label",
+                "ach"
+            );
             return true;
         }
 
@@ -362,19 +499,32 @@ public final class AchievementCommand implements CommandExecutor {
             new RunQueryCallback<RunLeaderboardEntry>() {
                 public void onResult(RunLeaderboardEntry best) {
                     if (best == null) {
-                        output.sendMessage(ChatColor.YELLOW + playerName + " has no completed run.");
+                        msg(
+                            output,
+                            "pb.empty",
+                            "&e{player} has no completed run.",
+                            "player",
+                            playerName
+                        );
                     } else {
-                        output.sendMessage(
-                            ChatColor.GREEN + playerName + " PB: "
-                                + formatDuration(best.getDurationMs())
-                                + ChatColor.GRAY + " (run #" + best.getRunNumber()
-                                + ", " + best.getTimingSource() + ")"
+                        msg(
+                            output,
+                            "pb.result",
+                            "&a{player} PB: {time}&7 (run #{run}, {source})",
+                            "player",
+                            playerName,
+                            "time",
+                            formatDuration(best.getDurationMs()),
+                            "run",
+                            Integer.toString(best.getRunNumber()),
+                            "source",
+                            best.getTimingSource()
                         );
                     }
                 }
 
                 public void onFailure(Exception exception) {
-                    output.sendMessage(ChatColor.RED + "Could not read personal best.");
+                    msg(output, "pb.failed", "&cCould not read personal best.");
                 }
             }
         );
@@ -387,7 +537,7 @@ public final class AchievementCommand implements CommandExecutor {
             try {
                 limit = Math.max(1, Math.min(25, Integer.parseInt(args[1])));
             } catch (NumberFormatException exception) {
-                sender.sendMessage(ChatColor.RED + "Leaderboard size must be a number.");
+                msg(sender, "top.invalid-size", "&cLeaderboard size must be a number.");
                 return true;
             }
         }
@@ -397,26 +547,39 @@ public final class AchievementCommand implements CommandExecutor {
             limit,
             new RunQueryCallback<List<RunLeaderboardEntry>>() {
                 public void onResult(List<RunLeaderboardEntry> entries) {
-                    output.sendMessage(ChatColor.GOLD + "Unlimited Achievement Race — Top "
-                        + entries.size());
+                    msg(
+                        output,
+                        "top.header",
+                        "&6Unlimited Achievement Race - Top {count}",
+                        "count",
+                        Integer.toString(entries.size())
+                    );
                     if (entries.isEmpty()) {
-                        output.sendMessage(ChatColor.GRAY + "No completed runs yet.");
+                        msg(output, "top.empty", "&7No completed runs yet.");
                         return;
                     }
                     int rank = 1;
                     for (RunLeaderboardEntry entry : entries) {
-                        output.sendMessage(
-                            ChatColor.YELLOW + String.format(Locale.US, "%2d. ", rank++)
-                                + ChatColor.WHITE + entry.getPlayerName()
-                                + ChatColor.GRAY + "  " + formatDuration(entry.getDurationMs())
-                                + "  run #" + entry.getRunNumber()
-                                + "  " + entry.getTimingSource()
+                        msg(
+                            output,
+                            "top.entry",
+                            "&e{rank}. &f{player}&7  {time}  run #{run}  {source}",
+                            "rank",
+                            String.format(Locale.US, "%2d", rank++),
+                            "player",
+                            entry.getPlayerName(),
+                            "time",
+                            formatDuration(entry.getDurationMs()),
+                            "run",
+                            Integer.toString(entry.getRunNumber()),
+                            "source",
+                            entry.getTimingSource()
                         );
                     }
                 }
 
                 public void onFailure(Exception exception) {
-                    output.sendMessage(ChatColor.RED + "Could not read leaderboard.");
+                    msg(output, "top.failed", "&cCould not read leaderboard.");
                 }
             }
         );
@@ -428,7 +591,11 @@ public final class AchievementCommand implements CommandExecutor {
             return true;
         }
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Debug mode is player-only.");
+            msg(
+                sender,
+                "debug-command.player-only",
+                "&cThis command can only be used by a player."
+            );
             return true;
         }
 
@@ -436,29 +603,49 @@ public final class AchievementCommand implements CommandExecutor {
         if (args.length < 2) {
             String current = plugin.getAchievements().getDebugTarget(admin);
             plugin.getAchievements().stopDebug(admin);
-            sender.sendMessage(
-                current == null ? "Debug was not active." : "Debug stopped for " + current + "."
-            );
+            if (current == null) {
+                msg(sender, "debug-command.not-active", "Debug was not active.");
+            } else {
+                msg(
+                    sender,
+                    "debug-command.stopped",
+                    "Debug stopped for {player}.",
+                    "player",
+                    current
+                );
+            }
             return true;
         }
 
         AchievementDefinition achievement = plugin.getRegistry().get(args[1]);
         if (achievement == null) {
-            sender.sendMessage("Unknown Beta achievement ID.");
+            msg(sender, "command.unknown-achievement", "&cUnknown Beta achievement ID.");
             return true;
         }
         plugin.getAchievements().startDebug(admin, achievement.getId());
-        sender.sendMessage(
-            ChatColor.YELLOW + "Now debugging " + achievement.getName() + " (" + achievement.getId()
-                + "). Parent requirements ignored; completions are not saved. Stop with /"
-                + label + " debug."
+        msg(
+            sender,
+            "debug-command.started",
+            "&eNow debugging {achievement} ({id}). Parent requirements ignored; completions are not saved. Stop with /{label} debug.",
+            "achievement",
+            plugin.getLanguage().achievementName(sender, achievement),
+            "id",
+            achievement.getId(),
+            "label",
+            label
         );
         return true;
     }
 
     private boolean check(CommandSender sender, String[] args) {
         if (args.length < 2) {
-            sender.sendMessage("Usage: /ach check <player>");
+            msg(
+                sender,
+                "check.usage",
+                "Usage: /{label} check <player>",
+                "label",
+                "ach"
+            );
             return true;
         }
         if (!allow(sender, "betaachievement.view.others")) {
@@ -466,7 +653,7 @@ public final class AchievementCommand implements CommandExecutor {
         }
         Player target = plugin.getServer().getPlayer(args[1]);
         if (target == null) {
-            sender.sendMessage(ChatColor.RED + "Player must be online.");
+            msg(sender, "command.player-online", "&cPlayer must be online.");
             return true;
         }
         return showProgress(sender, target);
@@ -474,11 +661,15 @@ public final class AchievementCommand implements CommandExecutor {
 
     private boolean showProgress(CommandSender sender, Player target) {
         if (plugin.getAchievements().isLoading(target)) {
-            sender.sendMessage(ChatColor.YELLOW + "Achievements are loading...");
+            msg(sender, "info.loading", "&eAchievements are loading...");
             return true;
         }
         if (plugin.getAchievements().isLoadFailed(target)) {
-            sender.sendMessage(ChatColor.RED + "Achievements failed to load. Please reconnect.");
+            msg(
+                sender,
+                "info.load-failed",
+                "&cAchievements failed to load. Please reconnect."
+            );
             return true;
         }
 
@@ -486,30 +677,53 @@ public final class AchievementCommand implements CommandExecutor {
         Set<String> completed = plugin.getAchievements().get(target);
         int total = plugin.getRegistry().all().size();
         int percent = total == 0 ? 0 : completed.size() * 100 / total;
-        sender.sendMessage(
-            ChatColor.GOLD + "Beta 1.7.3 Achievements - " + target.getName()
-                + "  Run #" + (run == null ? "?" : run.getRunNumber())
+        msg(
+            sender,
+            "progress.header",
+            "&6Beta 1.7.3 Achievements - {player}  Run #{run}",
+            "player",
+            target.getName(),
+            "run",
+            run == null ? "?" : Integer.toString(run.getRunNumber())
         );
-        sender.sendMessage(
-            ChatColor.YELLOW + "Progress: " + completed.size() + "/" + total + " (" + percent + "%)"
-                + ChatColor.GRAY + "  Elapsed: "
-                + formatDuration(plugin.getAchievements().getCurrentElapsedMs(target))
+        msg(
+            sender,
+            "progress.progress",
+            "&eProgress: {completed}/{total} ({percent}%)&7  Elapsed: {elapsed}",
+            "completed",
+            Integer.toString(completed.size()),
+            "total",
+            Integer.toString(total),
+            "percent",
+            Integer.toString(percent),
+            "elapsed",
+            formatDuration(plugin.getAchievements().getCurrentElapsedMs(target))
         );
-        sender.sendMessage(ChatColor.GREEN + "Completed:");
+        msg(sender, "progress.completed", "&aCompleted:");
         for (AchievementDefinition achievement : plugin.getRegistry().all()) {
             if (completed.contains(achievement.getId())) {
-                sender.sendMessage(
-                    ChatColor.GREEN + "[+] " + achievement.getName()
-                        + ChatColor.GRAY + " (" + achievement.getId() + ")"
+                msg(
+                    sender,
+                    "progress.completed-entry",
+                    "&a[+] {achievement}&7 ({id})",
+                    "achievement",
+                    plugin.getLanguage().achievementName(sender, achievement),
+                    "id",
+                    achievement.getId()
                 );
             }
         }
-        sender.sendMessage(ChatColor.RED + "Not completed:");
+        msg(sender, "progress.not-completed", "&cNot completed:");
         for (AchievementDefinition achievement : plugin.getRegistry().all()) {
             if (!completed.contains(achievement.getId())) {
-                sender.sendMessage(
-                    ChatColor.RED + "[-] " + achievement.getName()
-                        + ChatColor.GRAY + " (" + achievement.getId() + ")"
+                msg(
+                    sender,
+                    "progress.missing-entry",
+                    "&c[-] {achievement}&7 ({id})",
+                    "achievement",
+                    plugin.getLanguage().achievementName(sender, achievement),
+                    "id",
+                    achievement.getId()
                 );
             }
         }
@@ -524,28 +738,25 @@ public final class AchievementCommand implements CommandExecutor {
             || sender.hasPermission(legacyPermission)) {
             return true;
         }
-        String message = plugin.getConfiguration().getString(
-            "messages.no-permission",
-            "&cYou don't have permission."
-        );
-        sender.sendMessage(colour(message));
+        msg(sender, "command.no-permission", "&cYou do not have permission.");
         return false;
     }
 
-    private String colour(String input) {
-        StringBuilder output = new StringBuilder();
-        for (int index = 0; index < input.length(); index++) {
-            if (input.charAt(index) == '&' && index + 1 < input.length()) {
-                int code = Character.digit(input.charAt(index + 1), 16);
-                if (code >= 0) {
-                    output.append(ChatColor.getByCode(code));
-                    index++;
-                    continue;
-                }
-            }
-            output.append(input.charAt(index));
-        }
-        return output.toString();
+    private void msg(
+        CommandSender sender,
+        String key,
+        String fallback,
+        String... replacements
+    ) {
+        plugin.getLanguage().send(sender, key, fallback, replacements);
+    }
+
+    private String status(CommandSender sender, RunStatus status) {
+        return plugin.getLanguage().value(
+            sender,
+            "status." + status.name().toLowerCase(Locale.ROOT),
+            status.name()
+        );
     }
 
     private String formatDuration(long milliseconds) {

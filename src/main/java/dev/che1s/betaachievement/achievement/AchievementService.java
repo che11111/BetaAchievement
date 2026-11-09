@@ -10,7 +10,6 @@ import dev.che1s.betaachievement.run.RunProgressEntry;
 import dev.che1s.betaachievement.run.RunQueryCallback;
 import dev.che1s.betaachievement.run.RunSnapshot;
 import dev.che1s.betaachievement.run.RunStatus;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -184,9 +183,17 @@ public final class AchievementService {
         }
 
         if (attempt < MAX_LOAD_ATTEMPTS) {
-            plugin.getServer().getLogger().warning(
-                "Could not load achievements for " + player.getName() + " (attempt "
-                    + attempt + "/" + MAX_LOAD_ATTEMPTS + "): " + exception.getMessage()
+            plugin.getLanguage().warning(
+                "achievement.load-retry",
+                "Could not load achievements for {player} (attempt {attempt}/{max}): {error}",
+                "player",
+                player.getName(),
+                "attempt",
+                Integer.toString(attempt),
+                "max",
+                Integer.toString(MAX_LOAD_ATTEMPTS),
+                "error",
+                exception.getMessage()
             );
             onMainDelayed(new Runnable() {
                 public void run() {
@@ -201,12 +208,22 @@ public final class AchievementService {
         state.loading = false;
         state.failed = true;
         state.takeQueued();
-        plugin.getServer().getLogger().severe(
-            "Could not load achievements for " + player.getName()
-                + " after " + MAX_LOAD_ATTEMPTS + " attempts: " + exception.getMessage()
+        plugin.getLanguage().severe(
+            "achievement.load-failed",
+            "Could not load achievements for {player} after {max} attempts: {error}",
+            "player",
+            player.getName(),
+            "max",
+            Integer.toString(MAX_LOAD_ATTEMPTS),
+            "error",
+            exception.getMessage()
         );
         if (player.isOnline()) {
-            player.sendMessage(ChatColor.RED + "Achievements could not be loaded. Please reconnect.");
+            plugin.getLanguage().send(
+                player,
+                "achievement.player-load-failed",
+                "&cAchievements could not be loaded. Please reconnect."
+            );
         }
     }
 
@@ -285,8 +302,11 @@ public final class AchievementService {
                     onMain(new Runnable() {
                         public void run() {
                             timeoutCheckRunning = false;
-                            plugin.getServer().getLogger().severe(
-                                "Could not expire achievement runs: " + exception.getMessage()
+                            plugin.getLanguage().severe(
+                                "achievement.expire-failed",
+                                "Could not expire achievement runs: {error}",
+                                "error",
+                                exception.getMessage()
                             );
                         }
                     });
@@ -320,10 +340,14 @@ public final class AchievementService {
                                 return;
                             }
                             installSnapshotAndResume(player, state, snapshot);
-                            player.sendMessage(
-                                ChatColor.YELLOW + "Run #" + expiredRunNumber
-                                    + " expired after " + timeoutHours
-                                    + " hours and was deleted."
+                            plugin.getLanguage().send(
+                                player,
+                                "achievement.expired",
+                                "&eRun #{run} expired after {hours} hours and was deleted.",
+                                "run",
+                                Integer.toString(expiredRunNumber),
+                                "hours",
+                                Integer.toString(timeoutHours)
                             );
                         }
                     });
@@ -334,9 +358,13 @@ public final class AchievementService {
                                 state.loading = false;
                                 state.failed = true;
                             }
-                            plugin.getServer().getLogger().severe(
-                                "Could not refresh expired run for " + player.getName() + ": "
-                                    + exception.getMessage()
+                            plugin.getLanguage().severe(
+                                "achievement.refresh-failed",
+                                "Could not refresh expired run for {player}: {error}",
+                                "player",
+                                player.getName(),
+                                "error",
+                                exception.getMessage()
                             );
                         }
                     });
@@ -419,7 +447,13 @@ public final class AchievementService {
         boolean debug = achievementId.equals(debugTargets.get(playerId));
         if (achievement == null) {
             if (debug) {
-                debug(player, "未知成就 ID: " + achievementId);
+                debug(
+                    player,
+                    "debug.unknown-id",
+                    "Unknown achievement ID: {achievement}",
+                    "achievement",
+                    achievementId
+                );
             }
             return Action.UNAVAILABLE;
         }
@@ -427,19 +461,31 @@ public final class AchievementService {
         State state = states.get(playerId);
         if (state == null) {
             if (debug) {
-                debug(player, "玩家状态未加载（未 join 或未 load）");
+                debug(
+                    player,
+                    "debug.state-missing",
+                    "Player state is not loaded (the player has not joined or been loaded)."
+                );
             }
             return Action.UNAVAILABLE;
         }
         if (state.failed) {
             if (debug) {
-                debug(player, "成就数据加载失败，忽略触发");
+                debug(
+                    player,
+                    "debug.data-failed",
+                    "Achievement data failed to load; trigger ignored."
+                );
             }
             return Action.UNAVAILABLE;
         }
         if (state.loading) {
             if (debug) {
-                debug(player, "玩家数据仍在加载，调试触发未记录");
+                debug(
+                    player,
+                    "debug.loading",
+                    "Player data is still loading; debug trigger was not recorded."
+                );
                 return Action.IGNORED;
             }
             state.queue(new PendingOperation(OperationType.UNLOCK, achievementId, adminGrant));
@@ -447,7 +493,13 @@ public final class AchievementService {
         }
         if (state.unlocked.contains(achievementId)) {
             if (debug) {
-                debug(player, "触发 " + achievement.getName() + " 但本轮已完成，跳过");
+                debug(
+                    player,
+                    "debug.already-unlocked",
+                    "Triggered {achievement}, but it is already complete in this run.",
+                    "achievement",
+                    plugin.getLanguage().achievementName(player, achievement)
+                );
             }
             return Action.IGNORED;
         }
@@ -464,8 +516,12 @@ public final class AchievementService {
         if (debug) {
             debug(
                 player,
-                "[OK] 触发成就「" + achievement.getName() + "」(" + achievementId
-                    + ")：debug 忽略前置、未写入数据库"
+                "debug.triggered",
+                "[OK] Triggered {achievement} ({id}); debug ignored prerequisites and did not write to the database.",
+                "achievement",
+                plugin.getLanguage().achievementName(player, achievement),
+                "id",
+                achievementId
             );
             return Action.IGNORED;
         }
@@ -565,9 +621,13 @@ public final class AchievementService {
                             if (states.get(player.getUniqueId()) == state) {
                                 state.failed = true;
                             }
-                            plugin.getServer().getLogger().severe(
-                                "Could not save run progress for " + player.getName() + ": "
-                                    + exception.getMessage()
+                            plugin.getLanguage().severe(
+                                "achievement.save-progress-failed",
+                                "Could not save run progress for {player}: {error}",
+                                "player",
+                                player.getName(),
+                                "error",
+                                exception.getMessage()
                             );
                         }
                     });
@@ -576,8 +636,11 @@ public final class AchievementService {
         });
         if (!scheduled) {
             state.failed = true;
-            plugin.getServer().getLogger().severe(
-                "Could not queue run progress for " + player.getName()
+            plugin.getLanguage().severe(
+                "achievement.queue-progress-failed",
+                "Could not queue run progress for {player}.",
+                "player",
+                player.getName()
             );
         }
     }
@@ -602,66 +665,45 @@ public final class AchievementService {
         return achievementId.equals(debugTargets.get(player.getUniqueId()));
     }
 
-    public void debug(Player player, String message) {
-        player.sendMessage(ChatColor.GRAY + "[AchievementDebug] " + ChatColor.WHITE + message);
+    public void debug(
+        Player player,
+        String key,
+        String fallback,
+        String... replacements
+    ) {
+        plugin.getLanguage().send(
+            player,
+            "debug.format",
+            "&8[AchievementDebug] &f{message}",
+            "message",
+            plugin.getLanguage().gameValue(key, fallback, replacements)
+        );
     }
 
     private void notifyUnlocked(Player player, AchievementDefinition achievement) {
-        String message = plugin.getConfiguration()
-            .getString(
-                "messages.achievement-unlocked",
-                "&6Achievement Get! &f{player} &eunlocked &f{achievement}"
-            )
-            .replace("{player}", player.getName())
-            .replace("{achievement}", achievement.getName());
-        String coloured = colour(message);
+        String message = plugin.getLanguage().gameValue(
+            "achievement.unlocked",
+            "&6Achievement Get! &f{player} &eunlocked &f{achievement}",
+            "player",
+            player.getName(),
+            "achievement",
+            plugin.getLanguage().achievementName(player, achievement)
+        );
         if (plugin.getConfiguration().getBoolean("announce.broadcast", true)) {
-            plugin.getServer().broadcastMessage(coloured);
+            plugin.getServer().broadcastMessage(message);
         } else {
-            player.sendMessage(coloured);
+            player.sendMessage(message);
         }
         if (plugin.getConfiguration().getBoolean("announce.console", true)) {
-            String consoleMessage = plugin.getConfiguration()
-                .getString(
-                    "messages.achievement-unlocked-console",
-                    "[成就] {player} 获得了成就「{achievement}」"
-                )
-                .replace("{player}", player.getName())
-                .replace("{achievement}", achievement.getChineseName());
-            plugin.getServer().getLogger().info(plain(colour(consoleMessage)));
+            plugin.getLanguage().info(
+                "achievement.unlocked-console",
+                "[Achievement] {player} unlocked {achievement}",
+                "player",
+                player.getName(),
+                "achievement",
+                plugin.getLanguage().achievementName(achievement)
+            );
         }
-    }
-
-    private String colour(String input) {
-        StringBuilder output = new StringBuilder();
-        for (int index = 0; index < input.length(); index++) {
-            if (input.charAt(index) == '&' && index + 1 < input.length()) {
-                int code = Character.digit(input.charAt(index + 1), 16);
-                if (code >= 0) {
-                    output.append(ChatColor.getByCode(code));
-                    index++;
-                    continue;
-                }
-                output.append('&');
-            }
-            output.append(input.charAt(index));
-        }
-        return output.toString();
-    }
-
-    private String plain(String input) {
-        StringBuilder output = new StringBuilder();
-        for (int index = 0; index < input.length(); index++) {
-            char character = input.charAt(index);
-            if (character == '\u00A7') {
-                if (index + 1 < input.length()) {
-                    index++;
-                }
-            } else {
-                output.append(character);
-            }
-        }
-        return output.toString();
     }
 
     public Set<String> get(Player player) {
@@ -735,9 +777,13 @@ public final class AchievementService {
                             if (states.get(playerId) == state) {
                                 state.loading = false;
                             }
-                            plugin.getServer().getLogger().severe(
-                                "Could not create next run for " + player.getName() + ": "
-                                    + exception.getMessage()
+                            plugin.getLanguage().severe(
+                                "achievement.next-run-failed",
+                                "Could not create next run for {player}: {error}",
+                                "player",
+                                player.getName(),
+                                "error",
+                                exception.getMessage()
                             );
                         }
                     });
@@ -778,8 +824,11 @@ public final class AchievementService {
                     try {
                         database.setRunStatus(runId, RunStatus.ABANDONED, now);
                     } catch (Exception exception) {
-                        plugin.getServer().getLogger().severe(
-                            "Could not abandon run: " + exception.getMessage()
+                        plugin.getLanguage().severe(
+                            "achievement.abandon-failed",
+                            "Could not abandon run: {error}",
+                            "error",
+                            exception.getMessage()
                         );
                     }
                 }
@@ -829,9 +878,13 @@ public final class AchievementService {
                             if (states.get(playerId) == state) {
                                 state.loading = false;
                             }
-                            plugin.getServer().getLogger().severe(
-                                "Could not reset achievements for " + player.getName() + ": "
-                                    + exception.getMessage()
+                            plugin.getLanguage().severe(
+                                "achievement.reset-failed",
+                                "Could not reset achievements for {player}: {error}",
+                                "player",
+                                player.getName(),
+                                "error",
+                                exception.getMessage()
                             );
                         }
                     });
@@ -873,8 +926,13 @@ public final class AchievementService {
                         database.setRunStatus(runId, RunStatus.INVALID, System.currentTimeMillis());
                         database.deleteRunAchievement(runId, achievementId);
                     } catch (Exception exception) {
-                        plugin.getServer().getLogger().severe(
-                            "Could not revoke " + achievementId + ": " + exception.getMessage()
+                        plugin.getLanguage().severe(
+                            "achievement.revoke-failed",
+                            "Could not revoke {achievement}: {error}",
+                            "achievement",
+                            achievementId,
+                            "error",
+                            exception.getMessage()
                         );
                     }
                 }
@@ -887,7 +945,7 @@ public final class AchievementService {
         if (!database.isReady()) {
             onMain(new Runnable() {
                 public void run() {
-                    callback.onFailure(new IllegalStateException("Database is not ready"));
+                    callback.onFailure(databaseNotReady());
                 }
             });
             return;
@@ -926,7 +984,7 @@ public final class AchievementService {
         if (!scheduled) {
             onMain(new Runnable() {
                 public void run() {
-                    callback.onFailure(new IllegalStateException("Database is stopping"));
+                        callback.onFailure(databaseStopping());
                 }
             });
         }
@@ -937,7 +995,7 @@ public final class AchievementService {
         if (!database.isReady()) {
             onMain(new Runnable() {
                 public void run() {
-                    callback.onFailure(new IllegalStateException("Database is not ready"));
+                    callback.onFailure(databaseNotReady());
                 }
             });
             return;
@@ -987,7 +1045,7 @@ public final class AchievementService {
         if (!scheduled) {
             onMain(new Runnable() {
                 public void run() {
-                    callback.onFailure(new IllegalStateException("Database is stopping"));
+                    callback.onFailure(databaseStopping());
                 }
             });
         }
@@ -1008,11 +1066,11 @@ public final class AchievementService {
                     return;
                 }
                 if (!database.isReady()) {
-                    callback.onFailure(new IllegalStateException("Database is not ready"));
+                    callback.onFailure(databaseNotReady());
                     return;
                 }
                 if (!database.isEnabled()) {
-                    callback.onFailure(new IllegalArgumentException("Unknown player name: " + name));
+                    callback.onFailure(unknownPlayer(name));
                     return;
                 }
 
@@ -1023,9 +1081,7 @@ public final class AchievementService {
                             if (playerId == null) {
                                 onMain(new Runnable() {
                                     public void run() {
-                                        callback.onFailure(
-                                            new IllegalArgumentException("Unknown player name: " + name)
-                                        );
+                                        callback.onFailure(unknownPlayer(name));
                                     }
                                 });
                                 return;
@@ -1059,7 +1115,7 @@ public final class AchievementService {
                     }
                 });
                 if (!scheduled) {
-                    callback.onFailure(new IllegalStateException("Database is stopping"));
+                    callback.onFailure(databaseStopping());
                 }
             }
         });
@@ -1072,7 +1128,7 @@ public final class AchievementService {
         if (!database.isReady()) {
             onMain(new Runnable() {
                 public void run() {
-                    callback.onFailure(new IllegalStateException("Database is not ready"));
+                    callback.onFailure(databaseNotReady());
                 }
             });
             return;
@@ -1107,7 +1163,7 @@ public final class AchievementService {
         if (!database.isReady()) {
             onMain(new Runnable() {
                 public void run() {
-                    callback.onFailure(new IllegalStateException("Database is not ready"));
+                    callback.onFailure(databaseNotReady());
                 }
             });
             return;
@@ -1143,7 +1199,7 @@ public final class AchievementService {
         if (!database.isReady()) {
             onMain(new Runnable() {
                 public void run() {
-                    callback.onFailure(new IllegalStateException("Database is not ready"));
+                    callback.onFailure(databaseNotReady());
                 }
             });
             return;
@@ -1182,7 +1238,7 @@ public final class AchievementService {
         if (!database.isReady()) {
             onMain(new Runnable() {
                 public void run() {
-                    callback.onFailure(new IllegalStateException("Database is not ready"));
+                    callback.onFailure(databaseNotReady());
                 }
             });
             return;
@@ -1220,7 +1276,7 @@ public final class AchievementService {
         if (!database.isReady()) {
             onMain(new Runnable() {
                 public void run() {
-                    query.failure(new IllegalStateException("Database is not ready"));
+                    query.failure(databaseNotReady());
                 }
             });
             return;
@@ -1246,7 +1302,7 @@ public final class AchievementService {
         if (!scheduled) {
             onMain(new Runnable() {
                 public void run() {
-                    query.failure(new IllegalStateException("Database is stopping"));
+                    query.failure(databaseStopping());
                 }
             });
         }
@@ -1271,6 +1327,29 @@ public final class AchievementService {
 
     private Set<String> knownOnly(Collection<String> achievements) {
         return registry.knownOnly(achievements);
+    }
+
+    private IllegalStateException databaseNotReady() {
+        return new IllegalStateException(plugin.getLanguage().consoleValue(
+            "error.database-not-ready",
+            "Database is not ready"
+        ));
+    }
+
+    private IllegalStateException databaseStopping() {
+        return new IllegalStateException(plugin.getLanguage().consoleValue(
+            "error.database-stopping",
+            "Database is stopping"
+        ));
+    }
+
+    private IllegalArgumentException unknownPlayer(String name) {
+        return new IllegalArgumentException(plugin.getLanguage().consoleValue(
+            "error.unknown-player",
+            "Unknown player name: {player}",
+            "player",
+            name
+        ));
     }
 
     private void onMain(Runnable task) {

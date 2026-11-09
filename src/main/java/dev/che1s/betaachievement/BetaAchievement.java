@@ -5,6 +5,7 @@ import dev.che1s.betaachievement.achievement.AchievementService;
 import dev.che1s.betaachievement.api.BetaAchievementApi;
 import dev.che1s.betaachievement.command.AchievementCommand;
 import dev.che1s.betaachievement.database.DatabaseManager;
+import dev.che1s.betaachievement.lang.LanguageService;
 import dev.che1s.betaachievement.listener.AchievementListener;
 import dev.che1s.betaachievement.metrics.BukkitMetrics;
 import org.bukkit.command.PluginCommand;
@@ -25,6 +26,7 @@ public final class BetaAchievement extends JavaPlugin {
     private AchievementService achievements;
     private BetaAchievementApi api;
     private BukkitMetrics metrics;
+    private LanguageService language;
 
     @Override
     public void onEnable() {
@@ -36,6 +38,8 @@ public final class BetaAchievement extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
+        language = new LanguageService(this);
+        language.load();
 
         startMetrics();
 
@@ -47,7 +51,7 @@ public final class BetaAchievement extends JavaPlugin {
         AchievementCommand command = new AchievementCommand(this);
         PluginCommand achievementCommand = getCommand("achievement");
         if (achievementCommand == null) {
-            getServer().getLogger().severe("Could not register plugin commands.");
+            language.severe("startup.command-register-failed", "Could not register plugin commands.");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -63,13 +67,15 @@ public final class BetaAchievement extends JavaPlugin {
                 for (Player player : getServer().getOnlinePlayers()) {
                     achievements.load(player);
                 }
-                getServer().getLogger().info(
+                language.info(
+                    "startup.ready",
                     "Enabled with all 16 Beta 1.7.3 achievement definitions."
                 );
             }
         }, new Runnable() {
             public void run() {
-                getServer().getLogger().severe(
+                language.severe(
+                    "startup.storage-required",
                     "BetaAchievement is disabled: persistent storage must be available."
                 );
                 getServer().getPluginManager().disablePlugin(BetaAchievement.this);
@@ -85,8 +91,11 @@ public final class BetaAchievement extends JavaPlugin {
             metrics = new BukkitMetrics(this, BSTATS_PLUGIN_ID);
         } catch (Exception | LinkageError exception) {
             metrics = null;
-            getServer().getLogger().warning(
-                "Could not initialize bStats: " + exception.getMessage()
+            language.warning(
+                "startup.bstats-failed",
+                "Could not initialize bStats: {error}",
+                "error",
+                exception.getMessage()
             );
         }
     }
@@ -117,8 +126,18 @@ public final class BetaAchievement extends JavaPlugin {
                 outputStream.close();
             }
         } catch (IOException exception) {
+            String message = language == null
+                ? "Could not create " + name + ": " + exception.getMessage()
+                : language.console(
+                    "startup.resource-create-failed",
+                    "Could not create {file}: {error}",
+                    "file",
+                    name,
+                    "error",
+                    exception.getMessage()
+                );
             getServer().getLogger().warning(
-                "Could not create " + name + ": " + exception.getMessage()
+                message
             );
         } finally {
             try {
@@ -156,5 +175,9 @@ public final class BetaAchievement extends JavaPlugin {
 
     public BetaAchievementApi getApi() {
         return api;
+    }
+
+    public LanguageService getLanguage() {
+        return language;
     }
 }

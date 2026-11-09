@@ -64,6 +64,12 @@ BetaAchievement 是一个面向 Minecraft Beta 1.7.3 Project-Poseidon 的服务�
 # Restart the server after changing this file. / 修改配置后请重启服务器。
 # Back up achievements.db or the MySQL database before upgrading. / 升级前请备份数据库。
 
+language:
+  # Console language: auto, zh or en. / 控制台语言：auto、zh 或 en。
+  # auto follows the server JVM language; in-game messages are always English.
+  # auto 会根据服务器 JVM 语言自动选择；游戏内消息始终使用英文。
+  console: auto
+
 database:
   # Enable persistent storage. / 是否启用持久化。
   # When false, achievements are kept in memory and lost on restart. / false 时仅保存在内存，重启后清空。
@@ -106,19 +112,22 @@ bstats:
   # 发送匿名使用统计；不会发送玩家名或聊天内容。
   # The global opt-out is plugins/bStats/config.yml. / 全局关闭选项位于 plugins/bStats/config.yml。
   enabled: true
-
-messages:
-  # In-game unlock message. / 游戏内解锁消息。
-  # Supports & color codes, {player} and the English {achievement}. / 支持 & 颜色代码及玩家、英文成就名变量。
-  achievement-unlocked: '&6Achievement Get! &f{player} &eunlocked &f{achievement}'
-
-  # Console unlock message. / 控制台解锁消息。
-  # {player} is the player name; {achievement} is the Chinese name. / 变量依次为玩家名和中文成就名。
-  achievement-unlocked-console: '[成就] {player} 获得了成就「{achievement}」'
-
-  # Message shown when a player lacks permission. / 玩家无权限时的提示。
-  no-permission: '&cYou don''t have permission.'
 ```
+
+## 消息与语言
+
+Beta 1.7.3 客户端无法显示除了英文的其他语言，因此玩家聊天栏、命令回复和成就解锁提示始终读取 `plugins/BetaAchievement/lang/game.yml`，该文件只使用英文和 ASCII 字符。
+
+控制台消息分为：
+
+```text
+lang/console-zh.yml
+lang/console-en.yml
+```
+
+`language.console` 可设置为 `auto`、`zh` 或 `en`。`auto` 会读取服务器 JVM 的 `user.language`，中文环境使用 `console-zh.yml`，其他环境使用 `console-en.yml`。该规则同时适用于后台日志、警告、报错，以及从服务器控制台执行命令时的回复。
+
+首次启动会把这些语言文件复制到插件数据目录；修改后请重启服务器。三个文件使用相同的消息键，支持 `&` 颜色代码以及 `{player}`、`{achievement}`、`{error}` 等命名变量。
 
 ## 成就竞速
 

@@ -1,5 +1,5 @@
 name: BetaAchievement
-version: 1.0.0
+version: 1.0.1
 main: dev.che1s.betaachievement.BetaAchievement
 description: Server-side persistent Beta 1.7.3 achievements
 author: che1s

@@ -1,0 +1,178 @@
+# BetaAchievement 中文控制台消息。
+# 支持 {player}、{error}、{achievement} 等命名变量。
+
+prefix: "[BetaAchievement]"
+
+achievements:
+  openInventory: { name: "打开物品栏" }
+  mineWood: { name: "获得木头" }
+  buildWorkBench: { name: "这是？工作台！" }
+  buildPickaxe: { name: "采矿时间到！" }
+  buildFurnace: { name: "“热”门话题" }
+  acquireIron: { name: "来硬的" }
+  buildHoe: { name: "耕种时间到！" }
+  makeBread: { name: "烤面包" }
+  bakeCake: { name: "蛋糕是个谎言" }
+  buildBetterPickaxe: { name: "获得升级" }
+  cookFish: { name: "美味的鱼儿" }
+  onARail: { name: "在铁路上" }
+  buildSword: { name: "出击时间到！" }
+  killEnemy: { name: "怪物猎人" }
+  killCow: { name: "斗牛士" }
+  flyPig: { name: "当猪飞的时候" }
+
+startup:
+  ready: "已启用全部 16 个 Beta 1.7.3 成就定义。"
+  storage-required: "BetaAchievement 已禁用：持久化存储必须可用。"
+  config-load-failed: "无法载入 config.yml：{error}"
+  command-register-failed: "无法注册插件指令。"
+  bstats-failed: "无法初始化 bStats：{error}"
+  resource-create-failed: "无法创建 {file}：{error}"
+
+database:
+  disabled: "数据库已禁用：成就数据不会持久化，也不会作为权威数据源。"
+  start-failed: "无法启动 {type}：{error}"
+  task-rejected: "数据库任务被拒绝：存储正在停止。"
+  shutdown-timeout: "数据库写入未能在 {seconds} 秒内完成。"
+  invalid-type: "database.type 必须为 sqlite 或 mysql"
+  invalid-prefix: "database.table-prefix 只能包含 1-40 个字母、数字或下划线"
+  pool-exhausted: "数据库连接池已耗尽"
+  current-run-open: "当前挑战仍处于 {status} 状态"
+  run-not-found: "找不到挑战：{run}"
+  terminal-status-required: "挑战状态必须为终态"
+  inserted-run-unreadable: "无法读回刚创建的挑战记录"
+
+error:
+  database-not-ready: "数据库尚未就绪"
+  database-stopping: "数据库正在停止"
+  unknown-player: "未知玩家名称：{player}"
+
+achievement:
+  load-retry: "无法载入玩家 {player} 的成就数据（第 {attempt}/{max} 次）：{error}"
+  load-failed: "尝试 {max} 次后仍无法载入玩家 {player} 的成就数据：{error}"
+  player-load-failed: "成就数据载入失败，请重新连接。"
+  unlocked: "Achievement Get! {player} unlocked {achievement}"
+  unlocked-console: "成就解锁：{player} 获得了「{achievement}」"
+  expired: "第 {run} 轮挑战超过 {hours} 小时未完成，已被删除。"
+  expire-failed: "无法清理超时成就挑战：{error}"
+  refresh-failed: "无法刷新玩家 {player} 的超时挑战：{error}"
+  save-progress-failed: "无法保存玩家 {player} 的挑战进度：{error}"
+  queue-progress-failed: "无法排队保存玩家 {player} 的挑战进度。"
+  next-run-failed: "无法为玩家 {player} 创建下一轮挑战：{error}"
+  abandon-failed: "无法放弃挑战：{error}"
+  reset-failed: "无法重置玩家 {player} 的成就：{error}"
+  revoke-failed: "无法撤销成就 {achievement}：{error}"
+
+status:
+  ready: "准备中"
+  active: "进行中"
+  completed: "已完成"
+  invalid: "已失效"
+  abandoned: "已放弃"
+
+debug:
+  format: "[成就调试] {message}"
+  unknown-id: "未知成就 ID：{achievement}"
+  state-missing: "玩家状态尚未载入（玩家未加入或尚未 load）。"
+  data-failed: "成就数据载入失败，已忽略触发。"
+  loading: "玩家数据仍在载入，调试触发未记录。"
+  already-unlocked: "触发成就 {achievement}，但本轮已完成，已跳过。"
+  triggered: "[成功] 触发成就「{achievement}」({id})；调试模式忽略前置条件，未写入数据库。"
+  damage: "伤害来源={source}，目标={target}（ID={id}），是否怪物={monster}"
+  death: "死亡事件={target}（ID={id}），攻击记录存在（{age} 毫秒前）{expired}"
+  expired-suffix: "，已超时"
+
+command:
+  storage-initializing: "成就存储仍在初始化。"
+  console-check-usage: "用法：/{label} check <玩家名>"
+  admin-usage: "用法：/{label} <grant|grantall|revoke|reset> <玩家名> [成就ID]"
+  player-online: "目标玩家必须在线。"
+  player-data-load-failed: "玩家 {player} 的成就数据载入失败。"
+  state-unavailable: "玩家成就状态当前不可用。"
+  unknown-action: "未知操作。可用操作：run、pb、top、grant、grantall、revoke、reset、debug。"
+  missing-achievement: "缺少成就 ID。"
+  unknown-achievement: "未知的 Beta 成就 ID。"
+  no-permission: "你没有执行此操作的权限。"
+
+reset:
+  queued: "重置和创建下一轮挑战已加入队列。"
+  applied: "已重置玩家 {player}，历史记录已保留。"
+
+grant-all:
+  queued: "全部授予操作将在数据载入后执行。"
+  none: "没有需要补发的成就。"
+  applied: "已向玩家 {player} 授予 {count} 个成就；本轮挑战已失去排行榜资格。"
+
+grant:
+  applied: "已授予成就 {achievement}；本轮挑战已失去排行榜资格。"
+  queued: "授予操作将在数据载入后执行。"
+  already: "玩家本轮已经获得成就 {achievement}。"
+
+revoke:
+  applied: "已撤销成就 {achievement}；本轮挑战已失去排行榜资格。"
+  queued: "撤销操作将在数据载入后执行。"
+  not-granted: "玩家本轮尚未获得成就 {achievement}。"
+
+run:
+  player-only: "此指令只能由玩家执行。"
+  loading-retry: "成就仍在载入，请稍后重试。"
+  data-failed: "成就数据载入失败。"
+  next-requires-completion: "请先完成一次完整的 16/16 挑战，再开始新的一轮。"
+  next-queued: "正在创建下一轮挑战……"
+  next-created: "下一轮挑战已创建，进度已重置为 0/16。"
+  next-current-open: "请先完成或关闭当前挑战，再开始新的一轮。"
+  state-unavailable: "挑战状态当前不可用。"
+  abandon-requires-completion: "请先完成一次完整的 16/16 挑战，再放弃竞速。"
+  abandon-queued: "放弃请求已加入队列。"
+  abandon-applied: "当前挑战已放弃，历史记录已保留。"
+  abandon-none: "当前没有可放弃的重复挑战。"
+  usage: "用法：/{label} run <info|next|abandon|history>"
+
+history:
+  player-only: "此指令只能由玩家执行。"
+  header: "成就挑战历史"
+  empty: "尚无挑战记录。"
+  entry: "第 {run} 轮 {status}  {time}"
+  in-progress: "进行中"
+  failed: "无法读取挑战历史。"
+
+info:
+  player-only: "此指令只能由玩家执行。"
+  loading: "成就正在载入……"
+  load-failed: "成就载入失败，请重新连接。"
+  no-run: "当前没有成就挑战。"
+  header: "成就挑战第 {run} 轮 [{status}]"
+  progress: "进度：{completed}/{total}  已用时：{elapsed}"
+  final: "最终用时：{time}"
+  expires: "若挑战仍未完成，将在 {time} 后被删除。"
+  split: "{sequence}. {achievement}  单项 +{split}  累计 {total}"
+
+pb:
+  console-usage: "用法：/{label} pb <玩家名>"
+  empty: "玩家 {player} 尚无已完成挑战。"
+  result: "{player} 的个人最佳：{time}（第 {run} 轮，{source}）"
+  failed: "无法读取个人最佳成绩。"
+
+top:
+  invalid-size: "排行榜数量必须是数字。"
+  header: "无限成就竞速排行榜 - 前 {count} 名"
+  empty: "尚无已完成挑战。"
+  entry: "第 {rank} 名 {player}  {time}  第 {run} 轮  {source}"
+  failed: "无法读取排行榜。"
+
+debug-command:
+  player-only: "此指令只能由玩家执行。"
+  not-active: "调试模式原本未开启。"
+  stopped: "已停止调试玩家 {player}。"
+  started: "正在调试 {achievement}（{id}）。将忽略前置条件且不保存完成记录；使用 /{label} debug 停止。"
+
+check:
+  usage: "用法：/{label} check <玩家名>"
+
+progress:
+  header: "Beta 1.7.3 成就 - {player}  第 {run} 轮"
+  progress: "进度：{completed}/{total}（{percent}%）  已用时：{elapsed}"
+  completed: "已完成："
+  not-completed: "未完成："
+  completed-entry: "[+] {achievement}（{id}）"
+  missing-entry: "[-] {achievement}（{id}）"

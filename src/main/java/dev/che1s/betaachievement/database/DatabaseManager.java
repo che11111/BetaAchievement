@@ -90,7 +90,8 @@ public final class DatabaseManager {
         enabled = false;
         if (!plugin.getConfiguration().getBoolean("database.enabled", true)) {
             ready = true;
-            plugin.getServer().getLogger().warning(
+            plugin.getLanguage().warning(
+                "database.disabled",
                 "Database disabled: achievements will not be authoritative or persistent."
             );
             return true;
@@ -100,14 +101,18 @@ public final class DatabaseManager {
             String type = plugin.getConfiguration().getString("database.type", "sqlite");
             sqlite = "sqlite".equalsIgnoreCase(type);
             if (!sqlite && !"mysql".equalsIgnoreCase(type)) {
-                throw new IllegalArgumentException("database.type must be sqlite or mysql");
+                throw new IllegalArgumentException(plugin.getLanguage().consoleValue(
+                    "database.invalid-type",
+                    "database.type must be sqlite or mysql"
+                ));
             }
 
             prefix = plugin.getConfiguration().getString("database.table-prefix", "beta_achievements_");
             if (!prefix.matches("[A-Za-z0-9_]{1,40}")) {
-                throw new IllegalArgumentException(
+                throw new IllegalArgumentException(plugin.getLanguage().consoleValue(
+                    "database.invalid-prefix",
                     "database.table-prefix must contain 1-40 letters, digits or underscores"
-                );
+                ));
             }
 
             if (sqlite) {
@@ -137,8 +142,13 @@ public final class DatabaseManager {
             return true;
         } catch (Exception exception) {
             closeIdleConnections();
-            plugin.getServer().getLogger().severe(
-                "Cannot start " + (sqlite ? "SQLite" : "MySQL") + ": " + exception.getMessage()
+            plugin.getLanguage().severe(
+                "database.start-failed",
+                "Cannot start {type}: {error}",
+                "type",
+                sqlite ? "SQLite" : "MySQL",
+                "error",
+                exception.getMessage()
             );
             return false;
         }
@@ -150,14 +160,20 @@ public final class DatabaseManager {
 
     private boolean submit(Runnable task) {
         if (stopping || executor.isShutdown()) {
-            plugin.getServer().getLogger().warning("Database task rejected: storage is stopping.");
+            plugin.getLanguage().warning(
+                "database.task-rejected",
+                "Database task rejected: storage is stopping."
+            );
             return false;
         }
         try {
             executor.execute(task);
             return true;
         } catch (RejectedExecutionException exception) {
-            plugin.getServer().getLogger().warning("Database task rejected: storage is stopping.");
+            plugin.getLanguage().warning(
+                "database.task-rejected",
+                "Database task rejected: storage is stopping."
+            );
             return false;
         }
     }
@@ -190,7 +206,10 @@ public final class DatabaseManager {
     private Connection borrow() throws Exception {
         Connection connection = idle.poll(5, TimeUnit.SECONDS);
         if (connection == null) {
-            throw new SQLException("Database pool exhausted");
+            throw new SQLException(plugin.getLanguage().consoleValue(
+                "database.pool-exhausted",
+                "Database pool exhausted"
+            ));
         }
         if (connection.isClosed()) {
             allConnections.remove(connection);
@@ -534,7 +553,12 @@ public final class DatabaseManager {
                 AchievementRun latest = findLatestRun(connection, playerId.toString());
                 int runNumber = latest == null ? 1 : latest.getRunNumber() + 1;
                 if (latest != null && !latest.getStatus().isClosed()) {
-                    throw new IllegalStateException("Current run is still " + latest.getStatus());
+                    throw new IllegalStateException(plugin.getLanguage().consoleValue(
+                        "database.current-run-open",
+                        "Current run is still {status}",
+                        "status",
+                        latest.getStatus().toString()
+                    ));
                 }
                 long runId = insertRun(
                     connection,
@@ -587,7 +611,12 @@ public final class DatabaseManager {
                     }
                     update.setLong(6, run.getId());
                     if (update.executeUpdate() != 1) {
-                        throw new SQLException("Run not found: " + run.getId());
+                        throw new SQLException(plugin.getLanguage().consoleValue(
+                            "database.run-not-found",
+                            "Run not found: {run}",
+                            "run",
+                            Long.toString(run.getId())
+                        ));
                     }
                 } finally {
                     update.close();
@@ -616,7 +645,10 @@ public final class DatabaseManager {
 
     public boolean setRunStatus(long runId, RunStatus status, long endedAtMs) throws Exception {
         if (!status.isClosed()) {
-            throw new IllegalArgumentException("Run status must be terminal");
+            throw new IllegalArgumentException(plugin.getLanguage().consoleValue(
+                "database.terminal-status-required",
+                "Run status must be terminal"
+            ));
         }
         Connection connection = borrow();
         try {
@@ -848,7 +880,10 @@ public final class DatabaseManager {
             lookup.setInt(2, runNumber);
             ResultSet rows = lookup.executeQuery();
             if (!rows.next()) {
-                throw new SQLException("Inserted run could not be read back");
+                throw new SQLException(plugin.getLanguage().consoleValue(
+                    "database.inserted-run-unreadable",
+                    "Inserted run could not be read back"
+                ));
             }
             long runId = rows.getLong(1);
             rows.close();
@@ -909,7 +944,12 @@ public final class DatabaseManager {
             statement.setLong(1, runId);
             ResultSet rows = statement.executeQuery();
             if (!rows.next()) {
-                throw new SQLException("Run not found: " + runId);
+                throw new SQLException(plugin.getLanguage().consoleValue(
+                    "database.run-not-found",
+                    "Run not found: {run}",
+                    "run",
+                    Long.toString(runId)
+                ));
             }
             AchievementRun result = run(rows);
             rows.close();
@@ -1013,8 +1053,11 @@ public final class DatabaseManager {
         executor.shutdown();
         try {
             if (!executor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-                plugin.getServer().getLogger().warning(
-                    "Database writes did not finish within " + SHUTDOWN_TIMEOUT_SECONDS + " seconds."
+                plugin.getLanguage().warning(
+                    "database.shutdown-timeout",
+                    "Database writes did not finish within {seconds} seconds.",
+                    "seconds",
+                    Long.toString(SHUTDOWN_TIMEOUT_SECONDS)
                 );
                 executor.shutdownNow();
             }
